@@ -1,0 +1,36 @@
+{
+  "group_id": "897874da-9f39-4da9-88a5-38a065bf841b",
+  "states": [
+    {
+      "character": {
+        "id": "508a3343-bfa9-4f60-bd08-3c7375bac6a2",
+        "name": "Idle",
+        "prompt": "Anthropomorphic worker ant, pixel art game sprite, full body,  walking on four legs, the front two limbs are arms with small clawed hands  held in front of the body, empty hands ready to hold a tool,  black-brown body with subtle red-brown highlights, segmented body  with a rounded abdomen, head with two antennae and small mandibles,  clean dark outline, soft shading lit from above,  transparent background, no tools, no clothing",
+        "size": {
+          "width": 48,
+          "height": 48
+        },
+        "template_id": "custom",
+        "directions": 8,
+        "view": "side",
+        "created_at": "2026-10-26T17:36:18.612114+00:00"
+      },
+      "folder": "Idle",
+      "frames": {
+        "rotations": {
+          "south": "Idle/rotations/south.png",
+          "south-east": "Idle/rotations/south-east.png",
+          "east": "Idle/rotations/east.png",
+          "north-east": "Idle/rotations/north-east.png",
+          "north": "Idle/rotations/north.png",
+          "north-west": "Idle/rotations/north-west.png",
+          "west": "Idle/rotations/west.png",
+          "south-west": "Idle/rotations/south-west.png"
+        },
+        "animations": {}
+      }
+    }
+  ],
+  "export_version": "3.1",
+  "export_date": "2026-10-26T17:41:45.534153"
+}

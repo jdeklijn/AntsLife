@@ -1,13 +1,13 @@
 [gd_scene format=3 uid="uid://fahr8pt1tgy8"]
 
-[ext_resource type="Texture2D" uid="uid://c50faix6loyli" path="res://assests/godot_grondblokken_individual_tiles/grass_00.png" id="1_nnsk1"]
+[ext_resource type="PackedScene" path="res://scenes/entrance_sign.tscn" id="1_nnsk1"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_55n3y"]
-size = Vector2(100, 100)
+size = Vector2(2000, 2000)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_epk7b"]
-albedo_color = Color(6.617978e-08, 0.3471683, 8.1822276e-07, 1)
-albedo_texture = ExtResource("1_nnsk1")
+albedo_color = Color(0, 0.11372549, 0, 1)
+uv1_scale = Vector3(500, 500, 1)
 
 [sub_resource type="Sky" id="Sky_rwgxs"]
 
@@ -17,10 +17,13 @@ background_color = Color(0.6997574, 0.7955981, 0.9724185, 1)
 sky = SubResource("Sky_rwgxs")
 ambient_light_source = 3
 ambient_light_color = Color(0.6208461, 0.7498516, 0.9736813, 1)
+fog_light_color = Color(0.5019608, 0.9411765, 0.972549, 1)
+fog_density = 0.002
 
 [node name="world" type="Node3D" unique_id=1334674907]
 
 [node name="ground" type="MeshInstance3D" parent="." unique_id=1114006512]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.002285406, -1.4901161e-08, 0.0012485087)
 mesh = SubResource("PlaneMesh_55n3y")
 surface_material_override/0 = SubResource("StandardMaterial3D_epk7b")
 
@@ -36,3 +39,6 @@ light_energy = 2.0
 transform = Transform3D(1, 0, 0, 0, 0.85778826, 0.5140032, 0, -0.5140032, 0.85778826, 0, 36.26962, 46.26097)
 light_color = Color(0.7359807, 0.8351675, 0.5939893, 1)
 light_energy = 0.5
+
+[node name="EntranceSign" parent="." unique_id=2001887355 instance=ExtResource("1_nnsk1")]
+transform = Transform3D(2.902927, 0, 0, 0, 2.6021519, 1.1403407, 0, -1.5592594, 1.9030443, 0, 0, 0)

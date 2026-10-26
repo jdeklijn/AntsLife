@@ -28,32 +28,25 @@ grow_horizontal = 2
 grow_vertical = 2
 theme = SubResource("Theme_epk7b")
 
-[node name="HBoxLeft" type="HBoxContainer" parent="MainViewContainer" unique_id=1998427143]
+[node name="PanelLeft" type="Control" parent="MainViewContainer" unique_id=2003652167]
 layout_mode = 2
-theme = ExtResource("2_fnge6")
+size_flags_horizontal = 3
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MainViewContainer/HBoxLeft" unique_id=494126534]
-layout_mode = 2
-
-[node name="HBoxCenter" type="HBoxContainer" parent="MainViewContainer" unique_id=1418947147]
+[node name="PanelMiddle" type="Control" parent="MainViewContainer" unique_id=322190119]
 layout_mode = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MainViewContainer/HBoxCenter" unique_id=867654365]
+[node name="PanelRight" type="Control" parent="MainViewContainer" unique_id=766046763]
 layout_mode = 2
 
-[node name="HBoxRight" type="HBoxContainer" parent="MainViewContainer" unique_id=2008324246]
-layout_mode = 2
+[node name="VBoxContainer" type="VBoxContainer" parent="MainViewContainer/PanelRight" unique_id=325220469]
+layout_mode = 0
+offset_left = -574.0
+offset_right = -4.0
+offset_bottom = 648.0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MainViewContainer/HBoxRight" unique_id=289322422]
-layout_mode = 2
-size_flags_horizontal = 4
-size_flags_vertical = 0
-
-[node name="QuitGameBtn" type="Button" parent="MainViewContainer/HBoxRight/VBoxContainer" unique_id=2098252563]
+[node name="ButtonQuitGame" type="Button" parent="MainViewContainer/PanelRight/VBoxContainer" unique_id=1437071015]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 8
-size_flags_vertical = 0
 theme = ExtResource("2_fnge6")
-alignment = 2
+text = "Quit Game"
 script = ExtResource("3_a45jx")

@@ -1,0 +1,77 @@
+[gd_scene format=3 uid="uid://bd2fopjxgmclp"]
+
+[ext_resource type="Texture2D" uid="uid://cf3f3qjtff2yw" path="res://assests/ants/characters/idle/idle_SE.png" id="1_4s44o"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4guct"]
+atlas = ExtResource("1_4s44o")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_acg2n"]
+atlas = ExtResource("1_4s44o")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8svqu"]
+atlas = ExtResource("1_4s44o")
+region = Rect2(128, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hkm68"]
+atlas = ExtResource("1_4s44o")
+region = Rect2(192, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1c1h0"]
+atlas = ExtResource("1_4s44o")
+region = Rect2(256, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ikowd"]
+atlas = ExtResource("1_4s44o")
+region = Rect2(320, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dy442"]
+atlas = ExtResource("1_4s44o")
+region = Rect2(384, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vocod"]
+atlas = ExtResource("1_4s44o")
+region = Rect2(448, 0, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_55n3y"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4guct")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_acg2n")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8svqu")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hkm68")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1c1h0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ikowd")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dy442")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vocod")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 5.0
+}]
+
+[node name="ant_default" type="Node2D" unique_id=1886628234]
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1732732320]
+texture_filter = 1
+position = Vector2(95, 73)
+sprite_frames = SubResource("SpriteFrames_55n3y")
+animation = &"idle"
+autoplay = "idle"
+frame_progress = 0.8929646

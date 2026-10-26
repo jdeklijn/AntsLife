@@ -1,0 +1,48 @@
+[gd_scene format=3 uid="uid://p2oijfwk2j0q"]
+
+[ext_resource type="Script" uid="uid://cvhc56j1kuliw" path="res://scripts/levels/sandbox.gd" id="1_script"]
+[ext_resource type="FontFile" uid="uid://b78ndfxabn2ge" path="res://assests/fonts/Nunito/Nunito-VariableFont_wght.ttf" id="2_font"]
+
+[sub_resource type="StandardMaterial3D" id="Material_post"]
+albedo_color = Color(0.4, 0.28, 0.16, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_post"]
+material = SubResource("Material_post")
+size = Vector3(0.06, 0.4, 0.06)
+
+[sub_resource type="StandardMaterial3D" id="Material_board"]
+albedo_color = Color(0.55, 0.38, 0.22, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_board"]
+material = SubResource("Material_board")
+size = Vector3(1.2, 0.3, 0.04)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_click"]
+size = Vector3(0.7, 0.6, 0.2)
+
+[node name="EntranceSign" type="Node3D" unique_id=2008221129]
+
+[node name="Post" type="MeshInstance3D" parent="." unique_id=1974356593]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, -0.03)
+mesh = SubResource("BoxMesh_post")
+
+[node name="Board" type="MeshInstance3D" parent="." unique_id=842355671]
+transform = Transform3D(0.93385386, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+transparency = 0.15
+mesh = SubResource("BoxMesh_board")
+
+[node name="Label3D" type="Label3D" parent="Board" unique_id=1166183930]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.025)
+modulate = Color(0.93, 0.89, 0.82, 1)
+outline_modulate = Color(0.2, 0.12, 0.06, 1)
+text = "SANDBOX"
+font = ExtResource("2_font")
+font_size = 48
+outline_size = 6
+
+[node name="Area3D" type="Area3D" parent="." unique_id=1748758836]
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=83507829]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+shape = SubResource("BoxShape3D_click")
