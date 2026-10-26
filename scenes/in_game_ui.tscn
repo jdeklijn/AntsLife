@@ -1,0 +1,59 @@
+[gd_scene format=3 uid="uid://dr1ux6o6f663u"]
+
+[ext_resource type="FontFile" uid="uid://b78ndfxabn2ge" path="res://assests/fonts/Nunito/Nunito-VariableFont_wght.ttf" id="1_kplmn"]
+[ext_resource type="Theme" uid="uid://g74fe34o4g3d" path="res://assests/themes/ui_theme.tres" id="2_fnge6"]
+[ext_resource type="Script" uid="uid://co4wyunrss0oq" path="res://scripts/gui/quit_game_btn.gd" id="3_a45jx"]
+
+[sub_resource type="Theme" id="Theme_55n3y"]
+default_font = ExtResource("1_kplmn")
+default_font_size = 12
+
+[sub_resource type="Theme" id="Theme_epk7b"]
+
+[node name="GameMenu" type="Control" unique_id=800735734]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_55n3y")
+
+[node name="MainViewContainer" type="HBoxContainer" parent="." unique_id=499563330]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_epk7b")
+
+[node name="HBoxLeft" type="HBoxContainer" parent="MainViewContainer" unique_id=1998427143]
+layout_mode = 2
+theme = ExtResource("2_fnge6")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MainViewContainer/HBoxLeft" unique_id=494126534]
+layout_mode = 2
+
+[node name="HBoxCenter" type="HBoxContainer" parent="MainViewContainer" unique_id=1418947147]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MainViewContainer/HBoxCenter" unique_id=867654365]
+layout_mode = 2
+
+[node name="HBoxRight" type="HBoxContainer" parent="MainViewContainer" unique_id=2008324246]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MainViewContainer/HBoxRight" unique_id=289322422]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+
+[node name="QuitGameBtn" type="Button" parent="MainViewContainer/HBoxRight/VBoxContainer" unique_id=2098252563]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 0
+theme = ExtResource("2_fnge6")
+alignment = 2
+script = ExtResource("3_a45jx")

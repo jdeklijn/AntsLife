@@ -1,0 +1,38 @@
+[gd_scene format=3 uid="uid://fahr8pt1tgy8"]
+
+[ext_resource type="Texture2D" uid="uid://c50faix6loyli" path="res://assests/godot_grondblokken_individual_tiles/grass_00.png" id="1_nnsk1"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_55n3y"]
+size = Vector2(100, 100)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_epk7b"]
+albedo_color = Color(6.617978e-08, 0.3471683, 8.1822276e-07, 1)
+albedo_texture = ExtResource("1_nnsk1")
+
+[sub_resource type="Sky" id="Sky_rwgxs"]
+
+[sub_resource type="Environment" id="Environment_nnsk1"]
+background_mode = 1
+background_color = Color(0.6997574, 0.7955981, 0.9724185, 1)
+sky = SubResource("Sky_rwgxs")
+ambient_light_source = 3
+ambient_light_color = Color(0.6208461, 0.7498516, 0.9736813, 1)
+
+[node name="world" type="Node3D" unique_id=1334674907]
+
+[node name="ground" type="MeshInstance3D" parent="." unique_id=1114006512]
+mesh = SubResource("PlaneMesh_55n3y")
+surface_material_override/0 = SubResource("StandardMaterial3D_epk7b")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=80611715]
+environment = SubResource("Environment_nnsk1")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=344073411]
+transform = Transform3D(1, 0, 0, 0, 0.85778826, 0.5140032, 0, -0.5140032, 0.85778826, 0, 36.26962, 46.26097)
+light_color = Color(0.86586565, 0.80918443, 0.46464813, 1)
+light_energy = 2.0
+
+[node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=1043790301]
+transform = Transform3D(1, 0, 0, 0, 0.85778826, 0.5140032, 0, -0.5140032, 0.85778826, 0, 36.26962, 46.26097)
+light_color = Color(0.7359807, 0.8351675, 0.5939893, 1)
+light_energy = 0.5
