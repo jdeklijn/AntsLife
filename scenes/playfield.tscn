@@ -1,44 +1,40 @@
-[gd_scene format=4 uid="uid://i0qtdvb5mg4u"]
+[gd_scene format=3 uid="uid://cmk07gv71cs0u"]
 
-[ext_resource type="Texture2D" uid="uid://6frlnc76pbxa" path="res://assests/soilblocks/soilcollection_01.png" id="1_w0clp"]
-[ext_resource type="PackedScene" uid="uid://bd2fopjxgmclp" path="res://scenes/ant.tscn" id="2_y4l6t"]
-[ext_resource type="Texture2D" uid="uid://dvjiftrlceagx" path="res://assests/soilblocks/dirt_01.png" id="3_ts377"]
+[ext_resource type="Script" uid="uid://peyg171drmma" path="res://scripts/core/level_view_3D.gd" id="1_4hh8h"]
+[ext_resource type="Texture2D" uid="uid://dwl4hgnybfjc7" path="res://assests/world/textures/grass_a.png" id="2_nvc26"]
+[ext_resource type="Texture2D" uid="uid://brteobvr1kukp" path="res://assests/world/textures/dirt_dark.png" id="3_imw4w"]
+[ext_resource type="Script" uid="uid://d5ue6rbqevwd" path="res://scripts/gameplay/gui/level_camera.gd" id="4_i74au"]
+[ext_resource type="Script" uid="uid://0nqas77rb76s" path="res://scripts/core/layer_hud.gd" id="5_g3xb0"]
+[ext_resource type="Texture2D" uid="uid://ctsji5ofrlxq0" path="res://assests/ui/levels/eye_green.png" id="6_xs6qu"]
+[ext_resource type="Texture2D" uid="uid://cm4harib4jeog" path="res://assests/ui/levels/eye_grey.png" id="7_2johs"]
+[ext_resource type="Texture2D" uid="uid://jadnggg2etsr" path="res://assests/ui/levels/eye_closed_green.png" id="8_dhqd7"]
+[ext_resource type="Texture2D" uid="uid://hkrr4re0idpx" path="res://assests/ui/levels/eye_closed_grey.png" id="8_k06pt"]
+[ext_resource type="Texture2D" uid="uid://bdgw6rqmmh1w6" path="res://assests/ui/levels/arrow_left.png" id="10_isuf7"]
+[ext_resource type="Texture2D" uid="uid://dex62mqow61p" path="res://assests/ui/levels/arrow_right.png" id="11_htv1k"]
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_y4l6t"]
-texture = ExtResource("1_w0clp")
-texture_region_size = Vector2i(64, 64)
-0:0/0 = 0
-0:1/0 = 0
-0:2/0 = 0
-0:3/0 = 0
+[sub_resource type="BoxMesh" id="BoxMesh_5a21b"]
 
-[sub_resource type="TileSet" id="TileSet_epk7b"]
-tile_size = Vector2i(64, 64)
-sources/9 = SubResource("TileSetAtlasSource_y4l6t")
+[node name="LevelView3d" type="Node3D" unique_id=1367205066]
 
-[node name="standaard_playmap" type="Node2D" unique_id=162247137]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=4293627]
+mesh = SubResource("BoxMesh_5a21b")
+script = ExtResource("1_4hh8h")
+grass_texture = ExtResource("2_nvc26")
+dirt_texture = ExtResource("3_imw4w")
 
-[node name="TextureRect" type="TextureRect" parent="." unique_id=1645704914]
-modulate = Color(1, 1, 1, 0.43529412)
-custom_minimum_size = Vector2(2000, 1000)
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -16.0
-offset_top = -80.0
-offset_right = 984.0
-offset_bottom = 920.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-texture = ExtResource("3_ts377")
-expand_mode = 1
-stretch_mode = 1
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=632987849]
+transform = Transform3D(0.8660254, 0.35355338, -0.35355338, 0, 0.70710677, 0.70710677, 0.5, -0.6123724, 0.6123724, 0, 2.831264, 4.1946063)
 
-[node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=1473454932]
-texture_filter = 1
-tile_map_data = PackedByteArray("AAAAAAAACQAAAAIAAAABAAAACQAAAAIAAAACAAAACQAAAAIAAAAEAAAACQAAAAIAAAAFAAAACQAAAAIAAAAGAAAACQAAAAIAAAAHAAAACQAAAAIAAAAIAAAACQAAAAIAAAAJAAAACQAAAAIAAAAAAAEACQAAAAEAAAAAAAIACQAAAAAAAAAAAAMACQAAAAAAAAAAAAQACQAAAAAAAAAAAAUACQAAAAAAAAAAAAYACQAAAAAAAAAAAAcACQAAAAAAAAAAAAgACQAAAAAAAAAAAAkACQAAAAAAAAABAAkACQAAAAAAAAACAAkACQAAAAEAAAADAAkACQAAAAAAAAAEAAkACQAAAAAAAAAFAAkACQAAAAAAAAAGAAkACQAAAAAAAAAHAAkACQAAAAEAAAAIAAkACQAAAAAAAAAJAAkACQAAAAAAAAAJAAgACQAAAAEAAAAJAAcACQAAAAAAAAAJAAYACQAAAAAAAAAJAAUACQAAAAAAAAAIAAUACQAAAAEAAAAIAAQACQAAAAAAAAAIAAMACQAAAAAAAAAJAAMACQAAAAAAAAAJAAIACQAAAAAAAAAJAAQACQAAAAAAAAAJAAEACQAAAAAAAAABAAEACQAAAAAAAAACAAEACQAAAAAAAAADAAEACQAAAAAAAAAEAAEACQAAAAAAAAAFAAEACQAAAAAAAAAGAAEACQAAAAAAAAAHAAEACQAAAAAAAAAIAAEACQAAAAAAAAAIAAIACQAAAAEAAAAHAAIACQAAAAAAAAAGAAIACQAAAAEAAAAFAAIACQAAAAAAAAAEAAIACQAAAAAAAAADAAIACQAAAAEAAAACAAIACQAAAAAAAAABAAIACQAAAAAAAAABAAMACQAAAAAAAAACAAMACQAAAAEAAAADAAMACQAAAAAAAAAFAAMACQAAAAAAAAAGAAMACQAAAAAAAAAHAAMACQAAAAEAAAAEAAMACQAAAAAAAAAEAAQACQAAAAAAAAADAAQACQAAAAAAAAACAAQACQAAAAAAAAABAAQACQAAAAEAAAAFAAQACQAAAAAAAAAGAAQACQAAAAEAAAAHAAQACQAAAAAAAAAIAAYACQAAAAAAAAAHAAYACQAAAAAAAAAGAAYACQAAAAAAAAAFAAYACQAAAAAAAAAFAAUACQAAAAAAAAAEAAUACQAAAAAAAAADAAUACQAAAAAAAAACAAUACQAAAAAAAAABAAUACQAAAAAAAAAGAAUACQAAAAAAAAAHAAUACQAAAAAAAAAIAAcACQAAAAAAAAAIAAgACQAAAAAAAAAHAAgACQAAAAAAAAAGAAgACQAAAAAAAAAFAAgACQAAAAAAAAAEAAgACQAAAAEAAAADAAgACQAAAAAAAAACAAgACQAAAAAAAAABAAgACQAAAAEAAAABAAcACQAAAAAAAAABAAYACQAAAAEAAAACAAYACQAAAAAAAAADAAYACQAAAAEAAAAEAAYACQAAAAAAAAAFAAcACQAAAAAAAAAGAAcACQAAAAEAAAAHAAcACQAAAAAAAAAEAAcACQAAAAAAAAADAAcACQAAAAAAAAACAAcACQAAAAAAAAA=")
-tile_set = SubResource("TileSet_epk7b")
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1463283950]
+transform = Transform3D(1, 0, 0, 0, 0.9848077, 0.17364816, 0, -0.17364818, 0.98480767, 5, 12, 20)
+fov = 20.0
+script = ExtResource("4_i74au")
 
-[node name="ant_default" parent="." unique_id=1886628234 instance=ExtResource("2_y4l6t")]
-position = Vector2(129, -31)
+[node name="LayerHud" type="CanvasLayer" parent="." unique_id=835703771]
+script = ExtResource("5_g3xb0")
+green_eye = ExtResource("6_xs6qu")
+grey_eye = ExtResource("7_2johs")
+closed_green_eye = ExtResource("8_dhqd7")
+closed_grey_eye = ExtResource("8_k06pt")
+left_arrow = ExtResource("10_isuf7")
+right_arrow = ExtResource("11_htv1k")

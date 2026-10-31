@@ -1,6 +1,6 @@
 [gd_resource type="Theme" format=3 uid="uid://g74fe34o4g3d"]
 
-[ext_resource type="FontFile" uid="uid://b78ndfxabn2ge" path="res://assests/fonts/Nunito/Nunito-VariableFont_wght.ttf" id="1_ncup7"]
+[ext_resource type="FontFile" uid="uid://b78ndfxabn2ge" path="res://assests/ui/fonts/Nunito/Nunito-VariableFont_wght.ttf" id="1_ncup7"]
 
 [sub_resource type="StyleBoxFlat" id="btn_disabled"]
 content_margin_left = 16.0

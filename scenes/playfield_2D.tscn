@@ -1,0 +1,60 @@
+[gd_scene format=3 uid="uid://i0qtdvb5mg4u"]
+
+[ext_resource type="Texture2D" uid="uid://6frlnc76pbxa" path="res://assests/world/soilblocks/soilcollection_01.png" id="1_w0clp"]
+[ext_resource type="PackedScene" uid="uid://bd2fopjxgmclp" path="res://scenes/ant.tscn" id="2_y4l6t"]
+[ext_resource type="Script" uid="uid://dghocqbu6dqv6" path="res://scripts/levels/level_view.gd" id="3_k06pt"]
+[ext_resource type="Texture2D" uid="uid://dvjiftrlceagx" path="res://assests/world/soilblocks/dirt_01.png" id="3_ts377"]
+[ext_resource type="Script" uid="uid://cycrq4hutqhdt" path="res://scripts/ant_events/radial_menu.gd" id="4_i74au"]
+[ext_resource type="Script" uid="uid://rrln1ahcwylr" path="res://scripts/ant_events/ant_action.gd" id="5_2johs"]
+[ext_resource type="Resource" uid="uid://dfsburmwue1f1" path="res://scripts/ant_events/carry.tres" id="6_k06pt"]
+[ext_resource type="Resource" uid="uid://c6japol87oopf" path="res://scripts/ant_events/dig.tres" id="7_dhqd7"]
+[ext_resource type="Resource" uid="uid://dihd3crqnmv40" path="res://scripts/ant_events/defend.tres" id="8_isuf7"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_y4l6t"]
+texture = ExtResource("1_w0clp")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+0:1/0 = 0
+0:2/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_epk7b"]
+tile_size = Vector2i(64, 64)
+sources/9 = SubResource("TileSetAtlasSource_y4l6t")
+
+[node name="standaard_playmap" type="Node2D" unique_id=162247137]
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=1645704914]
+modulate = Color(1, 1, 1, 0.43529412)
+custom_minimum_size = Vector2(2000, 1000)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -16.0
+offset_top = -80.0
+offset_right = 984.0
+offset_bottom = 920.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("3_ts377")
+expand_mode = 1
+stretch_mode = 1
+
+[node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=1473454932]
+texture_filter = 1
+tile_set = SubResource("TileSet_epk7b")
+script = ExtResource("3_k06pt")
+
+[node name="ant_default" parent="." unique_id=1886628234 instance=ExtResource("2_y4l6t")]
+position = Vector2(222, 109)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=52321841]
+
+[node name="RadialMenu" type="Control" parent="CanvasLayer" unique_id=911720556]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("4_i74au")
+actions = Array[ExtResource("5_2johs")]([ExtResource("6_k06pt"), ExtResource("7_dhqd7"), ExtResource("8_isuf7")])
+metadata/_custom_type_script = "uid://cycrq4hutqhdt"

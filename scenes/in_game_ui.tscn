@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://dr1ux6o6f663u"]
 
-[ext_resource type="FontFile" uid="uid://b78ndfxabn2ge" path="res://assests/fonts/Nunito/Nunito-VariableFont_wght.ttf" id="1_kplmn"]
+[ext_resource type="FontFile" uid="uid://b78ndfxabn2ge" path="res://assests/ui/fonts/Nunito/Nunito-VariableFont_wght.ttf" id="1_kplmn"]
 [ext_resource type="Theme" uid="uid://g74fe34o4g3d" path="res://assests/themes/ui_theme.tres" id="2_fnge6"]
-[ext_resource type="Script" uid="uid://co4wyunrss0oq" path="res://scripts/gui/quit_game_btn.gd" id="3_a45jx"]
+[ext_resource type="Script" uid="uid://co4wyunrss0oq" path="res://scripts/gameplay/gui/quit_game_btn.gd" id="3_a45jx"]
 
 [sub_resource type="Theme" id="Theme_55n3y"]
 default_font = ExtResource("1_kplmn")

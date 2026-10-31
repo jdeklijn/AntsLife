@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://p2oijfwk2j0q"]
 
 [ext_resource type="Script" uid="uid://cvhc56j1kuliw" path="res://scripts/levels/sandbox.gd" id="1_script"]
-[ext_resource type="FontFile" uid="uid://b78ndfxabn2ge" path="res://assests/fonts/Nunito/Nunito-VariableFont_wght.ttf" id="2_font"]
+[ext_resource type="FontFile" uid="uid://b78ndfxabn2ge" path="res://assests/ui/fonts/Nunito/Nunito-VariableFont_wght.ttf" id="2_font"]
 
 [sub_resource type="StandardMaterial3D" id="Material_post"]
 albedo_color = Color(0.4, 0.28, 0.16, 1)

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="AntAction" format=3 uid="uid://dfsburmwue1f1"]
+
+[ext_resource type="Script" uid="uid://rrln1ahcwylr" path="res://scripts/ant_events/ant_action.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"carry"
+label = "Carry"
+min_level = 2
+allowed_categories = Array[String](["excavator", "transport"])

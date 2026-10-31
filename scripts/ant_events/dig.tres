@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="AntAction" format=3 uid="uid://c6japol87oopf"]
+
+[ext_resource type="Script" uid="uid://rrln1ahcwylr" path="res://scripts/ant_events/ant_action.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"dig"
+label = "Dig"
+allowed_categories = Array[String](["excavator"])

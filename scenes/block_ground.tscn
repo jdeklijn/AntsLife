@@ -1,11 +1,16 @@
 [gd_scene format=3 uid="uid://c83ddjsavb74g"]
 
-[ext_resource type="Texture2D" uid="uid://dljipp3ftnoyv" path="res://assests/godot_grondblokken_individual_tiles/dirt_00.png" id="1_q8qjq"]
+[ext_resource type="Texture2D" uid="uid://brteobvr1kukp" path="res://assests/world/textures/dirt_dark.png" id="1_q8qjq"]
+
+[ext_resource type="Texture2D" path="res://assests/world/textures/grass_a.png" id="2_grass"]
 
 [sub_resource type="QuadMesh" id="QuadMesh_55n3y"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yj8gp"]
 albedo_texture = ExtResource("1_q8qjq")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_top"]
+albedo_texture = ExtResource("2_grass")
 
 [node name="block_ground" type="Node3D" unique_id=1059144883]
 
@@ -15,12 +20,12 @@ mesh = SubResource("QuadMesh_55n3y")
 surface_material_override/0 = SubResource("StandardMaterial3D_yj8gp")
 
 [node name="side_back" type="MeshInstance3D" parent="." unique_id=1547417444]
-transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, -0.4753363)
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, -0.5)
 mesh = SubResource("QuadMesh_55n3y")
 surface_material_override/0 = SubResource("StandardMaterial3D_yj8gp")
 
 [node name="side_left" type="MeshInstance3D" parent="." unique_id=1269207693]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.5, 0, 0)
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -0.5, 0, 0)
 mesh = SubResource("QuadMesh_55n3y")
 surface_material_override/0 = SubResource("StandardMaterial3D_yj8gp")
 
@@ -32,9 +37,9 @@ surface_material_override/0 = SubResource("StandardMaterial3D_yj8gp")
 [node name="side_top" type="MeshInstance3D" parent="." unique_id=2107871739]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0.5, 0)
 mesh = SubResource("QuadMesh_55n3y")
-surface_material_override/0 = SubResource("StandardMaterial3D_yj8gp")
+surface_material_override/0 = SubResource("StandardMaterial3D_top")
 
 [node name="side_bottom" type="MeshInstance3D" parent="." unique_id=1112624017]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, -0.5, 0)
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, -0.5, 0)
 mesh = SubResource("QuadMesh_55n3y")
 surface_material_override/0 = SubResource("StandardMaterial3D_yj8gp")
