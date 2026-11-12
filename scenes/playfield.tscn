@@ -12,6 +12,13 @@
 [ext_resource type="Texture2D" uid="uid://bdgw6rqmmh1w6" path="res://assests/ui/levels/arrow_left.png" id="10_isuf7"]
 [ext_resource type="Texture2D" uid="uid://dex62mqow61p" path="res://assests/ui/levels/arrow_right.png" id="11_htv1k"]
 [ext_resource type="PackedScene" uid="uid://ulr5grbx2xsx" path="res://scenes/ant_3d.tscn" id="12_ant3d"]
+[ext_resource type="Script" uid="uid://cycrq4hutqhdt" path="res://scripts/ant_events/radial_menu.gd" id="13_radial"]
+[ext_resource type="Script" uid="uid://rrln1ahcwylr" path="res://scripts/ant_events/ant_action.gd" id="14_action"]
+[ext_resource type="Resource" uid="uid://dfsburmwue1f1" path="res://scripts/ant_events/carry.tres" id="15_carry"]
+[ext_resource type="Resource" uid="uid://c6japol87oopf" path="res://scripts/ant_events/dig.tres" id="16_dig"]
+[ext_resource type="Resource" uid="uid://dihd3crqnmv40" path="res://scripts/ant_events/defend.tres" id="17_defend"]
+[ext_resource type="Script" uid="uid://bf1awcy1v2pge" path="res://scripts/ant_events/ant_info_panel.gd" id="18_info"]
+[ext_resource type="Script" uid="uid://bnj485o5bvn0r" path="res://scripts/core/world_backdrop.gd" id="19_backdrop"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_5a21b"]
 
@@ -31,6 +38,9 @@ transform = Transform3D(1, 0, 0, 0, 0.9848077, 0.17364816, 0, -0.17364818, 0.984
 fov = 20.0
 script = ExtResource("4_i74au")
 
+[node name="Backdrop" type="Node3D" parent="." unique_id=1534663416]
+script = ExtResource("19_backdrop")
+
 [node name="LayerHud" type="CanvasLayer" parent="." unique_id=835703771]
 script = ExtResource("5_g3xb0")
 green_eye = ExtResource("6_xs6qu")
@@ -40,4 +50,18 @@ closed_grey_eye = ExtResource("8_k06pt")
 left_arrow = ExtResource("10_isuf7")
 right_arrow = ExtResource("11_htv1k")
 
-[node name="Ant" parent="." instance=ExtResource("12_ant3d")]
+[node name="Ant" parent="." unique_id=1539797722 instance=ExtResource("12_ant3d")]
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1132556764]
+
+[node name="RadialMenu" type="Control" parent="CanvasLayer" unique_id=380938520]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("13_radial")
+actions = Array[ExtResource("14_action")]([ExtResource("15_carry"), ExtResource("16_dig"), ExtResource("17_defend")])
+
+[node name="AntInfoPanel" type="CanvasLayer" parent="." unique_id=360145599]
+layer = 0
+script = ExtResource("18_info")

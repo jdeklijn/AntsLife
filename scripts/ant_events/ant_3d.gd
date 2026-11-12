@@ -14,9 +14,13 @@ extends Node3D
 @export var idle_animation: StringName = &"idle_loop"
 
 # ---- Ant data (decides which actions are available) ----
+@export var ant_name: String = "Ant"
 @export var category: String = "excavator"
 @export var level: int = 1
 @export var tools: Array[String] = []
+
+# What the ant is doing now. Shown in the info panel; empty means idle.
+var current_action: String = ""
 
 # ---- Selecting the ant with the mouse ----
 # An invisible box around the ant that catches the mouse click. It is larger than the
@@ -45,7 +49,14 @@ func _ready() -> void:
 	if show_hit_box:
 		_make_hit_box_debug()
 	Events.ant_selected.connect(_on_ant_selected)
+	Events.action_requested.connect(_on_action_requested)
 	_play_idle()
+	Ants.register(self)
+
+func _exit_tree() -> void:
+	# The autoload may already be gone while the game shuts down
+	if is_instance_valid(Ants):
+		Ants.unregister(self)
 
 # World z is the negative of the level z, the same way the level view builds the blocks
 
@@ -134,12 +145,39 @@ func _play_idle() -> void:
 		for animation_name in player.get_animation_list():
 			chosen = animation_name
 			break
-	player.get_animation(chosen).loop_mode = Animation.LOOP_LINEAR
+	var animation := player.get_animation(chosen)
+	if animation == null:
+		return
+	animation.loop_mode = Animation.LOOP_LINEAR
 	player.play(chosen)
 
 func check_action(_action: AntAction) -> String:
 	# Placeholder - implement based on ant category/tools
 	return ""
+
+# ---- Info for the selection panel ----
+
+func get_ant_name() -> String:
+	return ant_name
+
+func get_current_action() -> String:
+	return current_action
+
+# Called by the info panel. An empty name is refused, so an ant is never nameless.
+func set_ant_name(new_name: String) -> void:
+	var trimmed := new_name.strip_edges()
+	if trimmed == "":
+		return
+	ant_name = trimmed
+	Ants.set_ant_name(self, ant_name)
+
+func _on_action_requested(ant: Node, action: Resource) -> void:
+	if ant != self:
+		return
+	current_action = str(action.get("label"))
+	Ants.set_action(self, current_action)
+	# Picking an action ends the interaction: drop the selection, the ring and the panel
+	deselect()
 
 # Where the radial menu should appear (2D screen position above the ant)
 func get_menu_position() -> Vector2:
