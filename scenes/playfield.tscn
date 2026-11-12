@@ -11,6 +11,7 @@
 [ext_resource type="Texture2D" uid="uid://hkrr4re0idpx" path="res://assests/ui/levels/eye_closed_grey.png" id="8_k06pt"]
 [ext_resource type="Texture2D" uid="uid://bdgw6rqmmh1w6" path="res://assests/ui/levels/arrow_left.png" id="10_isuf7"]
 [ext_resource type="Texture2D" uid="uid://dex62mqow61p" path="res://assests/ui/levels/arrow_right.png" id="11_htv1k"]
+[ext_resource type="PackedScene" uid="uid://ulr5grbx2xsx" path="res://scenes/ant_3d.tscn" id="12_ant3d"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_5a21b"]
 
@@ -38,3 +39,5 @@ closed_green_eye = ExtResource("8_dhqd7")
 closed_grey_eye = ExtResource("8_k06pt")
 left_arrow = ExtResource("10_isuf7")
 right_arrow = ExtResource("11_htv1k")
+
+[node name="Ant" parent="." instance=ExtResource("12_ant3d")]

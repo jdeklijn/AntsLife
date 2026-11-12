@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" uid="uid://ulr5grbx2xsx" path="res://scenes/ant_3d.tscn" id="1_ant"]
+
+[node name="AntPreview" type="Node3D"]
+
+[node name="Ant" parent="." instance=ExtResource("1_ant")]
+transform = Transform3D(0.8776, 0, -0.4794, 0, 1, 0, 0.4794, 0, 0.8776, 0, 0, 0)
+place_on_cell = false
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.9659, 0.2588, 0, -0.2588, 0.9659, 0, 0.55, 1.6)
+fov = 45.0
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.8660254, 0.35355338, -0.35355338, 0, 0.70710677, 0.70710677, 0.5, -0.6123724, 0.6123724, 0, 3, 4)

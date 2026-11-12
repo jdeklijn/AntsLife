@@ -22,8 +22,10 @@ signal layers_changed(peeled: Dictionary)
 @export var size_falloff: float = 0.04
 # Space between the edge of the block and the eyes, in pixels
 @export var edge_margin: float = 8.0
-# The depth layers lie close together on screen. This spreads them out along the same
-# line, and min_diagonal_step is the smallest distance between two eyes in pixels.
+# In the top and bottom views the depth layers lie on one spot on screen. There they are
+# spread out along the same line; diagonal_spread scales the step and min_diagonal_step
+# is the smallest distance between two eyes in pixels. In the side views every eye sits
+# exactly on its own layer instead.
 @export var diagonal_spread: float = 1.5
 @export var min_diagonal_step: float = 22.0
 # Keep the eyes on the screen when the block is panned far away
@@ -218,7 +220,8 @@ func _rebuild() -> void:
 	_eyes.clear()
 	_build_set(LayerSet.COLUMN, _up_face, "F")
 	_build_set(LayerSet.DIAGONAL, _near_face, "V")
-	_place_eyes()	
+	_place_eyes()
+	print("LayerHud: %d eyes, view %s" % [_eyes.size(), _view_name])  # temporary debug
 
 # One eye for every layer of the face, nearest layer first
 func _build_set(layer_set: int, face: int, key: String) -> void:
@@ -270,15 +273,19 @@ func _place_eyes() -> void:
 	# The column follows the layers along the top-left edge of the block, one by one
 	var up_inward := _face_inward(_up_face)
 
-	# The diagonal follows the receding edge. In a view from the front it is short on
-	# screen, so it is spread out (and in the top view it would shrink to a point).
+	# The diagonal follows the receding edge of the near face, so every eye sits on its
+	# own layer. In the top and bottom views that edge points straight at the camera and
+	# all layers would land on one spot, so there they are spread out along the line.
 	var near_inward := _face_inward(_near_face)
+	var facing_layers := _view_name == "top" or _view_name == "bottom"
 	var first := camera.unproject_position(corner + near_inward * 0.5)
-	var second := camera.unproject_position(corner + near_inward * 1.5)
-	var step := (second - first) * diagonal_spread
-	if step.length() < min_diagonal_step:
-		var direction := step.normalized() if step.length() > 0.01 else Vector2(0.7, -0.7)
-		step = direction * min_diagonal_step
+	var step := Vector2.ZERO
+	if facing_layers:
+		var second := camera.unproject_position(corner + near_inward * 1.5)
+		step = (second - first) * diagonal_spread
+		if step.length() < min_diagonal_step:
+			var direction := step.normalized() if step.length() > 0.01 else Vector2(0.7, -0.7)
+			step = direction * min_diagonal_step
 
 	for entry in _eyes:
 		var node: TextureRect = entry["node"]
@@ -288,9 +295,12 @@ func _place_eyes() -> void:
 		if entry["set"] == LayerSet.COLUMN:
 			base_size = column_eye_size
 			center = camera.unproject_position(corner + up_inward * (layer + 0.5))
-		else:
+		elif facing_layers:
 			base_size = diagonal_eye_size
 			center = first + step * layer
+		else:
+			base_size = diagonal_eye_size
+			center = camera.unproject_position(corner + near_inward * (layer + 0.5))
 		# Beside the block, not on top of it
 		center.x -= base_size.x / 2.0 + edge_margin
 		var eye_px := base_size * (1.0 - size_falloff * layer)

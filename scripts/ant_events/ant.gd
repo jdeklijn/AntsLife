@@ -53,10 +53,14 @@ func check_action(action: AntAction) -> String:
 	return ""
 
 # Another ant was selected: release this ant's marker
-func _on_ant_selected(ant: Node2D) -> void:
+func _on_ant_selected(ant: Node) -> void:
 	if ant != self and selected:
 		selected = false
 		queue_redraw()
+
+# Where the radial menu should appear (2D screen position)
+func get_menu_position() -> Vector2:
+	return get_global_transform_with_canvas().origin
 
 func _draw() -> void:
 	if selected:

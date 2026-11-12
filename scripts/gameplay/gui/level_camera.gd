@@ -9,6 +9,14 @@ signal view_changed(view_name: String, view_index: int)
 # It scales with the zoom, so the movement on screen feels the same at any zoom level.
 @export var pan_speed: float = 8.0
 
+# Hold the right mouse button and drag to turn the camera freely around the level.
+# The value is radians of rotation per pixel of mouse movement.
+@export var mouse_sensitivity: float = 0.005
+# Set this when dragging up and down feels the wrong way round
+@export var invert_mouse_y: bool = false
+# The camera stops just before looking straight up or down, so the view cannot flip
+@export var max_pitch: float = 1.55
+
 # Zoom limits, as field of view in degrees (smaller = zoomed in)
 @export var min_fov: float = 5.0
 @export var max_fov: float = 40.0
@@ -41,6 +49,11 @@ var _pitch_goal: float
 var _side_pitch: float     # pitch used for the four side views
 var _mode: Mode = Mode.SIDE
 var _view_index: int = 0   # counts the quarter turns, 0 = the view the game started with
+var _dragging: bool = false
+
+# Above this pitch the HUD switches to its top or bottom layout, because the side faces
+# are then almost seen edge-on.
+const POLE_PITCH := 1.40
 
 # The view the game started with, which C returns to
 var _home_target: Vector3
@@ -65,6 +78,48 @@ func _ready() -> void:
 	_home_yaw = _yaw
 	_home_pitch = _pitch
 	_home_fov = fov
+
+func _input(event: InputEvent) -> void:
+	# Right mouse button: hold it down and drag to look around freely
+	var button := event as InputEventMouseButton
+	if button != null:
+		if button.button_index != MOUSE_BUTTON_RIGHT:
+			return
+		_dragging = button.pressed
+		if _dragging:
+			_going_home = false
+		get_viewport().set_input_as_handled()
+		return
+	var motion := event as InputEventMouseMotion
+	if motion != null and _dragging:
+		_turn_with_mouse(motion.relative)
+		get_viewport().set_input_as_handled()
+
+# Turns the camera the way the mouse moves, like looking around in a 3D game
+func _turn_with_mouse(relative: Vector2) -> void:
+	_going_home = false
+	_yaw_goal -= relative.x * mouse_sensitivity
+	var pitch_delta := relative.y * mouse_sensitivity
+	if not invert_mouse_y:
+		pitch_delta = -pitch_delta
+	_pitch_goal = clampf(_pitch_goal + pitch_delta, -max_pitch, max_pitch)
+	_sync_view_from_angles()
+
+# The HUD draws the eyes for one face at a time. While the camera turns freely, keep it
+# in step with the side that now faces the viewer, and use the pole layout near the top
+# or the bottom, where a side face is almost seen edge-on.
+func _sync_view_from_angles() -> void:
+	var index := roundi(-_yaw_goal / (PI / 2.0))
+	var mode := Mode.SIDE
+	if _pitch_goal <= -POLE_PITCH:
+		mode = Mode.TOP
+	elif _pitch_goal >= POLE_PITCH:
+		mode = Mode.BOTTOM
+	if mode == _mode and posmod(index, 4) == posmod(_view_index, 4):
+		return
+	_view_index = index
+	_mode = mode
+	_announce()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed:

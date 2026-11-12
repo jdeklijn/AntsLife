@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://ulr5grbx2xsx"]
+
+[ext_resource type="Script" uid="uid://b6ljwkggljjl8" path="res://scripts/ant_events/ant_3d.gd" id="1_pretj"]
+[ext_resource type="PackedScene" uid="uid://tyxiaej4k4qa" path="res://assests/art/characters/ants/player_ant/3d-block-ant.gltf" id="2_n6ajo"]
+
+[node name="Ant" type="Node3D" unique_id=1252848930]
+script = ExtResource("1_pretj")
+
+[node name="3d_block_ant" parent="." unique_id=1905742793 instance=ExtResource("2_n6ajo")]
+transform = Transform3D(-0.22, 0, 0, 0, 0.22, 0, 0, 0, -0.22, 0, 0, 0)

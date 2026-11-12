@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bd2fopjxgmclp"]
+
+[ext_resource type="Script" uid="uid://b6ljwkggljjl8" path="res://scripts/ant_events/ant_3d.gd" id="1_4s44o"]
+
+[node name="Ant" type="Node3D" unique_id=1252848930]
+script = ExtResource("1_4s44o")
