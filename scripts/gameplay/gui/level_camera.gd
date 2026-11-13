@@ -9,6 +9,13 @@ signal view_changed(view_name: String, view_index: int)
 # It scales with the zoom, so the movement on screen feels the same at any zoom level.
 @export var pan_speed: float = 8.0
 
+# Hold the left mouse button and drag to slide the level in the plane of the screen.
+# A press that stays within this many pixels is a click, which selects an ant.
+@export var drag_threshold: float = 6.0
+# On: the level follows the mouse, like dragging a map. Off: the view moves the same way
+# you drag, which is the direction WASD uses.
+@export var drag_follows_mouse: bool = true
+
 # Hold the right mouse button and drag to turn the camera freely around the level.
 # The value is radians of rotation per pixel of mouse movement.
 @export var mouse_sensitivity: float = 0.005
@@ -50,6 +57,12 @@ var _side_pitch: float     # pitch used for the four side views
 var _mode: Mode = Mode.SIDE
 var _view_index: int = 0   # counts the quarter turns, 0 = the view the game started with
 var _dragging: bool = false
+# The left button is either a click (select) or a drag (slide the level)
+var _left_down: bool = false
+var _panning: bool = false
+var _pan_was_drag: bool = false
+var _press_position: Vector2
+var _mouse_was_down: bool = false
 
 # Above this pitch the HUD switches to its top or bottom layout, because the side faces
 # are then almost seen edge-on.
@@ -122,11 +135,25 @@ func _sync_view_from_angles() -> void:
 	_announce()
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed:
+	if event is InputEventMouseButton:
+		# The left button slides the level. A press that does not move is a click, so the
+		# ant can still select itself when the button is released.
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			_left_down = event.pressed
+			if event.pressed:
+				_panning = false
+				_pan_was_drag = false
+				_press_position = event.position
+			return
+		if not event.pressed:
+			return
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 			_zoom(wheel_zoom_step)
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			_zoom(1.0 / wheel_zoom_step)
+	elif event is InputEventMouseMotion:
+		if _left_down and not _dragging and (event.button_mask & MOUSE_BUTTON_MASK_LEFT) != 0:
+			_drag_view(event)
 	elif event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
 			KEY_Q: _turn_to_side(1)           # the side on the left of the current view
@@ -135,7 +162,43 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_X: _toggle_mode(Mode.BOTTOM)  # look from below, press again to go back
 			KEY_C: _go_home()                 # back to the starting view
 
+# Slides the level along with the mouse while the left button is held. Only after the
+# mouse has moved drag_threshold pixels, so a small wobble stays a click.
+func _drag_view(motion: InputEventMouseMotion) -> void:
+	if not _panning:
+		if motion.position.distance_to(_press_position) < drag_threshold:
+			return
+		_panning = true
+		_pan_was_drag = true
+	_going_home = false
+	# The same screen directions WASD uses: camera right (kept flat) and the up direction
+	# of the screen. One pixel of mouse movement moves the level one pixel on screen.
+	var right := Vector3(global_basis.x.x, 0.0, global_basis.x.z).normalized()
+	var up := global_basis.y if absf(_pitch) > PI / 4.0 else Vector3.UP
+	var per_pixel := 2.0 * _distance * tan(deg_to_rad(fov) * 0.5) / maxf(
+		get_viewport().get_visible_rect().size.y, 1.0)
+	var move := (up * motion.relative.y - right * motion.relative.x) * per_pixel
+	if not drag_follows_mouse:
+		move = -move
+	_target = (_target + move).clamp(bounds_min, bounds_max)
+	get_viewport().set_input_as_handled()
+
+# The ant asks this when the left button is released: after a drag it was not a click
+func view_dragged() -> bool:
+	return _pan_was_drag
+
 func _process(delta: float) -> void:
+	# Each new press starts a fresh click. The HUD may have eaten the press event, so watch
+	# the real mouse as well and make sure a previous drag cannot block the next click.
+	var down := Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
+	if down and not _mouse_was_down and not _panning:
+		_pan_was_drag = false
+	_mouse_was_down = down
+	# Keep the held state in step with the real mouse: the release can be eaten by the
+	# HUD, and then this node never receives it
+	if _left_down and not down:
+		_left_down = false
+		_panning = false
 	_pan(delta)
 	_zoom_with_keys(delta)
 

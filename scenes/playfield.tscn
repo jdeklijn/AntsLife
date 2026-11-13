@@ -5,20 +5,23 @@
 [ext_resource type="Texture2D" uid="uid://brteobvr1kukp" path="res://assests/world/textures/dirt_dark.png" id="3_imw4w"]
 [ext_resource type="Script" uid="uid://d5ue6rbqevwd" path="res://scripts/gameplay/gui/level_camera.gd" id="4_i74au"]
 [ext_resource type="Script" uid="uid://0nqas77rb76s" path="res://scripts/core/layer_hud.gd" id="5_g3xb0"]
-[ext_resource type="Texture2D" uid="uid://ctsji5ofrlxq0" path="res://assests/ui/levels/eye_green.png" id="6_xs6qu"]
-[ext_resource type="Texture2D" uid="uid://cm4harib4jeog" path="res://assests/ui/levels/eye_grey.png" id="7_2johs"]
-[ext_resource type="Texture2D" uid="uid://jadnggg2etsr" path="res://assests/ui/levels/eye_closed_green.png" id="8_dhqd7"]
-[ext_resource type="Texture2D" uid="uid://hkrr4re0idpx" path="res://assests/ui/levels/eye_closed_grey.png" id="8_k06pt"]
-[ext_resource type="Texture2D" uid="uid://bdgw6rqmmh1w6" path="res://assests/ui/levels/arrow_left.png" id="10_isuf7"]
-[ext_resource type="Texture2D" uid="uid://dex62mqow61p" path="res://assests/ui/levels/arrow_right.png" id="11_htv1k"]
+[ext_resource type="Texture2D" uid="uid://cvpq76tsky4u2" path="res://assests/ui/levels/eyes/green_open_eye.png" id="7_ve100"]
+[ext_resource type="Texture2D" uid="uid://c0aosda0p3jai" path="res://assests/ui/levels/eyes/grey_open_eye.png" id="8_ujkq1"]
+[ext_resource type="Texture2D" uid="uid://bcerqjjqdrw87" path="res://assests/ui/levels/eyes/green_closed_eye.png" id="9_2f1wu"]
+[ext_resource type="Texture2D" uid="uid://cpn2wuw13p0ai" path="res://assests/ui/levels/eyes/grey_closed_eye.png" id="10_d8xr4"]
+[ext_resource type="Texture2D" uid="uid://bue1nstx32qfc" path="res://assests/ui/levels/eyes/woodensignwith pole.png" id="11_cq03w"]
+[ext_resource type="Texture2D" uid="uid://bib7tlg0o5meo" path="res://assests/ui/levels/eyes/woodensign.png" id="12_2duwx"]
 [ext_resource type="PackedScene" uid="uid://ulr5grbx2xsx" path="res://scenes/ant_3d.tscn" id="12_ant3d"]
+[ext_resource type="Texture2D" uid="uid://jv8flxtn13ke" path="res://assests/ui/levels/wood_arrow_leftv2.png" id="13_02pas"]
 [ext_resource type="Script" uid="uid://cycrq4hutqhdt" path="res://scripts/ant_events/radial_menu.gd" id="13_radial"]
 [ext_resource type="Script" uid="uid://rrln1ahcwylr" path="res://scripts/ant_events/ant_action.gd" id="14_action"]
+[ext_resource type="Texture2D" uid="uid://dphbk48ehwcut" path="res://assests/ui/levels/wood_arrow_right.png" id="14_huw7b"]
 [ext_resource type="Resource" uid="uid://dfsburmwue1f1" path="res://scripts/ant_events/carry.tres" id="15_carry"]
 [ext_resource type="Resource" uid="uid://c6japol87oopf" path="res://scripts/ant_events/dig.tres" id="16_dig"]
 [ext_resource type="Resource" uid="uid://dihd3crqnmv40" path="res://scripts/ant_events/defend.tres" id="17_defend"]
 [ext_resource type="Script" uid="uid://bf1awcy1v2pge" path="res://scripts/ant_events/ant_info_panel.gd" id="18_info"]
 [ext_resource type="Script" uid="uid://bnj485o5bvn0r" path="res://scripts/core/world_backdrop.gd" id="19_backdrop"]
+[ext_resource type="Script" path="res://scripts/gameplay/gui/level_sidebar.gd" id="20_sidebar"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_5a21b"]
 
@@ -43,12 +46,18 @@ script = ExtResource("19_backdrop")
 
 [node name="LayerHud" type="CanvasLayer" parent="." unique_id=835703771]
 script = ExtResource("5_g3xb0")
-green_eye = ExtResource("6_xs6qu")
-grey_eye = ExtResource("7_2johs")
-closed_green_eye = ExtResource("8_dhqd7")
-closed_grey_eye = ExtResource("8_k06pt")
-left_arrow = ExtResource("10_isuf7")
-right_arrow = ExtResource("11_htv1k")
+green_eye = ExtResource("7_ve100")
+grey_eye = ExtResource("8_ujkq1")
+closed_green_eye = ExtResource("9_2f1wu")
+closed_grey_eye = ExtResource("10_d8xr4")
+column_eye_size = Vector2(30, 30)
+diagonal_eye_size = Vector2(22, 22)
+column_eye_offset = Vector2(15, 0)
+diagonal_eye_offset = Vector2(15, 0)
+sign_post_texture = ExtResource("11_cq03w")
+sign_board_texture = ExtResource("12_2duwx")
+left_arrow = ExtResource("13_02pas")
+right_arrow = ExtResource("14_huw7b")
 
 [node name="Ant" parent="." unique_id=1539797722 instance=ExtResource("12_ant3d")]
 
@@ -65,3 +74,9 @@ actions = Array[ExtResource("14_action")]([ExtResource("15_carry"), ExtResource(
 [node name="AntInfoPanel" type="CanvasLayer" parent="." unique_id=360145599]
 layer = 0
 script = ExtResource("18_info")
+
+[node name="LevelSidebar" type="CanvasLayer" parent="."]
+layer = 2
+script = ExtResource("20_sidebar")
+
+[connection signal="cycle_changed" from="LevelSidebar" to="Backdrop" method="set_night_amount"]

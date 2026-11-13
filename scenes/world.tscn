@@ -41,4 +41,4 @@ light_color = Color(0.7359807, 0.8351675, 0.5939893, 1)
 light_energy = 0.5
 
 [node name="EntranceSign" parent="." unique_id=2001887355 instance=ExtResource("1_nnsk1")]
-transform = Transform3D(2.902927, 0, 0, 0, 2.6021519, 1.1403407, 0, -1.5592594, 1.9030443, 0, 0, 0)
+transform = Transform3D(1.25, 0, 0, 0, 1.25, 0, 0, 0, 1.25, 0, 0, 0)

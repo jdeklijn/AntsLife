@@ -32,6 +32,21 @@ const DEFAULT_DIRT := preload("res://assests/world/textures/dirt_dark.png")
 # you would see underground)
 @export var fog_color: Color = Color(0.26, 0.19, 0.13)
 
+@export_group("Night")
+# The same colours, but for the night. set_night_amount() blends between the day value
+# above and the night value here: 0 = day, 1 = night.
+@export var night_sky_top_color: Color = Color(0.03, 0.05, 0.13)
+@export var night_sky_horizon_color: Color = Color(0.10, 0.13, 0.26)
+@export var night_ambient_energy: float = 0.30
+@export var night_fog_color: Color = Color(0.05, 0.06, 0.10)
+@export var night_fog_density: float = 0.003
+@export var night_ground_tint: Color = Color(0.35, 0.40, 0.55)
+@export var night_ceiling_tint: Color = Color(0.30, 0.28, 0.26)
+@export var night_wall_tint: Color = Color(0.28, 0.25, 0.23)
+# Lights that are a sibling of the backdrop (the sun in the level) are dimmed too
+@export var night_light_energy: float = 0.15
+@export var night_light_color: Color = Color(0.55, 0.65, 1.0)
+
 @export_group("Underground")
 # Soil plane under the grass. It is only drawn from below, so above ground you never
 # see it, but under ground it hides the sky and reads as the underside of the soil.
@@ -47,12 +62,20 @@ const DEFAULT_DIRT := preload("res://assests/world/textures/dirt_dark.png")
 @export var wall_tint: Color = Color(0.55, 0.49, 0.43)
 @export var wall_segments: int = 64
 
+var _environment: Environment
+var _sky_material: ProceduralSkyMaterial
+var _ground_material: StandardMaterial3D
+var _ceiling_material: StandardMaterial3D
+var _wall_material: StandardMaterial3D
+var _lights: Array[Dictionary] = []
+
 func _ready() -> void:
 	var height := _surface_height()
 	_build_environment()
 	_build_ground(height)
 	_build_ceiling(height)
 	_build_wall(height)
+	_collect_lights()
 
 # In this level the grass is the top cell row, so its surface is surface_y + 1
 func _surface_height() -> float:
@@ -90,6 +113,9 @@ func _build_environment() -> void:
 	env.fog_density = fog_density
 	env.fog_sky_affect = 0.0
 
+	_environment = env
+	_sky_material = sky_material
+
 	var world_env := WorldEnvironment.new()
 	world_env.name = "WorldEnvironment"
 	world_env.environment = env
@@ -115,6 +141,7 @@ func _build_ground(height: float) -> void:
 	ground.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	ground.position = Vector3(0.0, height - ground_epsilon, 0.0)
 	add_child(ground)
+	_ground_material = material
 
 # The underside of the ground. The grass plane is single-sided, so from below it is
 # invisible and you would look straight into the sky. This plane is the mirror image
@@ -133,6 +160,7 @@ func _build_ceiling(height: float) -> void:
 	ceiling.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	ceiling.position = Vector3(0.0, height - ceiling_offset, 0.0)
 	add_child(ceiling)
+	_ceiling_material = material
 
 # Closes off the sky at eye level. The soil ceiling cannot do that: a ray that runs
 # exactly level never meets a horizontal plane, so the sky's horizon stays visible as a
@@ -158,6 +186,47 @@ func _build_wall(height: float) -> void:
 	# Top edge flush with the soil ceiling, so the two form one closed shell
 	wall.position = Vector3(0.0, height - ceiling_offset - wall_depth * 0.5, 0.0)
 	add_child(wall)
+	_wall_material = material
+
+# Remembers the lights around the backdrop, so the night can dim them
+func _collect_lights() -> void:
+	_lights.clear()
+	var parent := get_parent()
+	if parent == null:
+		return
+	for node in parent.get_children():
+		var light := node as Light3D
+		if light == null:
+			continue
+		_lights.append({
+			"node": light,
+			"energy": light.light_energy,
+			"color": light.light_color,
+		})
+
+# 0 = full day, 1 = full night. Blends the sky, the fog, the ambient light, the ground
+# and the sun between the day and the night values.
+func set_night_amount(amount: float) -> void:
+	amount = clampf(amount, 0.0, 1.0)
+	if _sky_material != null:
+		_sky_material.sky_top_color = sky_top_color.lerp(night_sky_top_color, amount)
+		_sky_material.sky_horizon_color = sky_horizon_color.lerp(night_sky_horizon_color, amount)
+	if _environment != null:
+		_environment.ambient_light_energy = lerpf(ambient_energy, night_ambient_energy, amount)
+		_environment.fog_light_color = fog_color.lerp(night_fog_color, amount)
+		_environment.fog_density = lerpf(fog_density, night_fog_density, amount)
+	if _ground_material != null:
+		_ground_material.albedo_color = ground_tint.lerp(night_ground_tint, amount)
+	if _ceiling_material != null:
+		_ceiling_material.albedo_color = ceiling_tint.lerp(night_ceiling_tint, amount)
+	if _wall_material != null:
+		_wall_material.albedo_color = wall_tint.lerp(night_wall_tint, amount)
+	for entry in _lights:
+		var light := entry["node"] as Light3D
+		if light == null:
+			continue
+		light.light_energy = lerpf(float(entry["energy"]), night_light_energy, amount)
+		light.light_color = (entry["color"] as Color).lerp(night_light_color, amount)
 
 # Unshaded soil, drawn from the inside only: invisible above ground, dark underground
 func _soil_material(tint: Color) -> StandardMaterial3D:

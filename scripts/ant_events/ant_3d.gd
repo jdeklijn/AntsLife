@@ -94,12 +94,19 @@ func _make_hit_box_debug() -> void:
 # ---- Selecting ----
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		if _is_under_mouse():
-			select()
-			get_viewport().set_input_as_handled()
-		elif selected:
-			deselect()
+	var button := event as InputEventMouseButton
+	if button == null or button.button_index != MOUSE_BUTTON_LEFT or button.pressed:
+		return
+	# Selecting happens when the button is released, so holding it down to slide the
+	# level does not select the ant as well
+	var camera := get_viewport().get_camera_3d()
+	if camera is PlayfieldCamera and camera.view_dragged():
+		return
+	if _is_under_mouse():
+		select()
+		get_viewport().set_input_as_handled()
+	elif selected:
+		deselect()
 
 func _is_under_mouse() -> bool:
 	var camera := get_viewport().get_camera_3d()

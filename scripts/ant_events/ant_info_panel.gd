@@ -13,7 +13,11 @@ const ANT_MODEL := preload("res://assests/art/characters/ants/player_ant/3d-bloc
 signal stack_changed(panel_rect: Rect2, stack_top: float)
 
 @export var panel_width: float = 200.0
-@export var min_panel_height: float = 120.0
+# Height of the card. Leave at 0 to make it exactly as tall as its content (preview,
+# name and action); set a value above 0 to force that height.
+@export var panel_height: float = 0.0
+# Never make the card shorter than this, even when the content is smaller
+@export var min_panel_height: float = 0.0
 # Distance from the top of the screen to the card
 @export var top_margin: float = 4.0
 # Space kept free under the card for the "select room" panel that comes later
@@ -29,6 +33,7 @@ signal stack_changed(panel_rect: Rect2, stack_top: float)
 @export var text_color: Color = Color(0.80, 0.85, 0.74)
 
 var _panel: PanelContainer
+var _column: VBoxContainer
 var _name_label: Label
 var _name_edit: LineEdit
 var _pencil: Button
@@ -43,6 +48,8 @@ var _ant: Node = null
 var _open: bool = false
 var _editing: bool = false
 var _tween: Tween
+# Height we asked for last time, so the card is not resized every frame
+var _fitted_height: float = -1.0
 
 func _ready() -> void:
 	_build()
@@ -54,6 +61,7 @@ func _process(delta: float) -> void:
 	if _open and is_instance_valid(_ant):
 		_refresh()
 		_update_preview(delta)
+		_fit_height()
 
 func _build() -> void:
 	var style := StyleBoxFlat.new()
@@ -79,6 +87,7 @@ func _build() -> void:
 	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	column.add_theme_constant_override("separation", 6)
 	_panel.add_child(column)
+	_column = column
 
 	# Live preview of the ant, so you can see idle / dig / carry at a glance
 	_preview_rect = TextureRect.new()
@@ -121,7 +130,11 @@ func _build() -> void:
 	column.add_child(caption)
 
 	_action_label = _make_label(19, title_color)
-	_action_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	# One line, cut off with "...". An autowrap label reports the height of the whole text
+	# wrapped at one pixel as its minimum, so a short action left a big empty strip below it.
+	_action_label.clip_text = true
+	_action_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_action_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	column.add_child(_action_label)
 
 func _make_label(font_size: int, color: Color) -> Label:
@@ -418,9 +431,52 @@ func get_panel_rect() -> Rect2:
 func get_stack_top() -> float:
 	return _panel.position.y + _panel.size.y + stack_gap
 
+# How tall the card wants to be: the forced panel_height, or exactly as tall as the
+# content, so no empty strip is left under the action
+func _wanted_height() -> float:
+	var height := panel_height
+	if height <= 0.0:
+		height = _content_height()
+	height = maxf(height, min_panel_height)
+	# A Control can never be smaller than its own minimum size, so ask for at least that
+	return maxf(height, _panel.get_combined_minimum_size().y)
+
+# Adds up the visible rows plus the style margins. This is measured per row instead of
+# asking the panel, because a container's own minimum size also counts hidden rows.
+func _content_height() -> float:
+	var height := 0.0
+	var shown := 0
+	for child in _column.get_children():
+		var control := child as Control
+		if control == null or not control.visible:
+			continue
+		height += control.get_combined_minimum_size().y
+		shown += 1
+	height += _column.get_theme_constant("separation") * float(maxi(shown - 1, 0))
+	var style := _panel.get_theme_stylebox("panel")
+	if style != null:
+		height += style.get_minimum_size().y
+	return height
+
+# Shrinks or grows the card while the action text changes
+func _fit_height() -> void:
+	if panel_height > 0.0:
+		return
+	var height := _wanted_height()
+	# Compare against the request, not against the panel: a forced minimum would make the
+	# card taller than asked and then it would be resized on every frame
+	if is_equal_approx(height, _fitted_height):
+		return
+	_fitted_height = height
+	_panel.size = Vector2(panel_width, height)
+	stack_changed.emit(
+		Rect2(_rest_x(), _panel.position.y, panel_width, height),
+		_panel.position.y + height + stack_gap)
+
 func _show_panel() -> void:
 	var screen := get_viewport().get_visible_rect().size
-	var height := maxf(_panel.get_combined_minimum_size().y, min_panel_height)
+	var height := _wanted_height()
+	_fitted_height = height
 	_panel.size = Vector2(panel_width, height)
 	# Pinned to the top right, so the space under it stays free
 	var y := top_margin
@@ -442,6 +498,7 @@ func _hide_panel() -> void:
 	if not _open:
 		return
 	_open = false
+	_fitted_height = -1.0
 	_set_preview_active(false)
 	_slide_to(_screen_width())
 
