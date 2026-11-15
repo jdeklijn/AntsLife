@@ -2,20 +2,20 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cpq1qdhlbksmg"
-path.s3tc="res://.godot/imported/3d-block-ant_1.png-7fdda17e1fdcfcb5c3bfb2adfaed7e6d.s3tc.ctex"
+uid="uid://cfpflxggw6f5a"
+path.s3tc="res://.godot/imported/ant_v3_compleet_2.png-dc0469288205619eb6706130052c66e5.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 generator_parameters={
-"md5": "53b802051c2ffe37ea2fc7b73b337a63"
+"md5": "73df7d8d08e52719d5c2d522196d04d3"
 }
 
 [deps]
 
-source_file="res://assests/art/characters/ants/player_ant/3d-block-ant_1.png"
-dest_files=["res://.godot/imported/3d-block-ant_1.png-7fdda17e1fdcfcb5c3bfb2adfaed7e6d.s3tc.ctex"]
+source_file="res://assests/art/characters/ants/player_ant/ant_v3_compleet_2.png"
+dest_files=["res://.godot/imported/ant_v3_compleet_2.png-dc0469288205619eb6706130052c66e5.s3tc.ctex"]
 
 [params]
 

@@ -32,11 +32,19 @@ signal view_changed(view_name: String, view_index: int)
 # The field of view is halved this many times per second while + or - is held
 @export var key_zoom_rate: float = 0.5
 
-# The camera turns around the level. This is roughly the middle of the 10 x 12 x 10 test level.
+# The camera turns around the level. These are only fallbacks: when a level is found in
+# the scene its size sets the centre and the pan bounds, so a level can grow without
+# editing the numbers here.
 @export var level_center: Vector3 = Vector3(5.0, 6.0, -5.0)
 # The point the camera looks at can never leave this box (the size of the level)
 @export var bounds_min: Vector3 = Vector3(0.0, 0.0, -10.0)
 @export var bounds_max: Vector3 = Vector3(10.0, 12.0, 0.0)
+# Take the centre, the pan bounds and the starting zoom from the level in the scene.
+# Turn this off to keep the values above exactly as they are.
+@export var fit_level: bool = true
+# The level size the starting view above was tuned for. The starting distance grows or
+# shrinks with the level, so a bigger level keeps the same relative framing.
+const DESIGN_SIZE := Vector3(10.0, 12.0, 10.0)
 # How quickly the camera moves to another view
 @export var turn_speed: float = 10.0
 
@@ -76,12 +84,21 @@ var _home_fov: float
 var _going_home: bool = false
 
 func _ready() -> void:
-	# Work out what the camera looks at from where the scene placed it, so the
-	# starting view stays exactly as you set it up in the editor
-	var forward := -global_basis.z
-	var along := (level_center - global_position).dot(forward)
-	_target = global_position + forward * along
-	_distance = global_position.distance_to(_target)
+	# A level in the same scene decides where the camera turns and how far it starts out
+	var level := _find_level()
+	var fits := fit_level and level != null
+	var level_scale := 1.0
+	if fits:
+		level_scale = _fit_to_level(level)
+		_target = level_center
+		_distance = global_position.distance_to(_target) * level_scale
+	else:
+		# Work out what the camera looks at from where the scene placed it, so the
+		# starting view stays exactly as you set it up in the editor
+		var forward := -global_basis.z
+		var along := (level_center - global_position).dot(forward)
+		_target = global_position + forward * along
+		_distance = global_position.distance_to(_target)
 	_yaw = rotation.y
 	_pitch = rotation.x
 	_yaw_goal = _yaw
@@ -91,6 +108,19 @@ func _ready() -> void:
 	_home_yaw = _yaw
 	_home_pitch = _pitch
 	_home_fov = fov
+
+# The level data lives on the level view beside this camera
+func _find_level() -> LevelData:
+	return LevelData.find_sibling(self)
+
+# Looks at the middle of the level, keeps panning inside it, and returns how much bigger
+# this level is than the one the starting view was tuned for
+func _fit_to_level(level: LevelData) -> float:
+	level_center = Vector3(level.size.x * 0.5, level.size.y * 0.5, -level.size.z * 0.5)
+	bounds_min = Vector3(0.0, 0.0, -level.size.z)
+	bounds_max = Vector3(level.size.x, level.size.y, 0.0)
+	var size := Vector3(level.size)
+	return maxf(size.x / DESIGN_SIZE.x, maxf(size.y / DESIGN_SIZE.y, size.z / DESIGN_SIZE.z))
 
 func _input(event: InputEvent) -> void:
 	# Right mouse button: hold it down and drag to look around freely

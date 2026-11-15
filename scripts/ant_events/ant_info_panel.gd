@@ -6,7 +6,8 @@ extends CanvasLayer
 
 const FONT = preload("res://assests/ui/fonts/Nunito/Nunito-VariableFont_wght.ttf")
 const PENCIL_PATH := "res://assests/ui/icons/pencil.svg"
-const ANT_MODEL := preload("res://assests/art/characters/ants/player_ant/3d-block-ant.gltf")
+const ANT_MODEL := preload("res://assests/art/characters/ants/player_ant/ant_v3_compleet.gltf")
+const ANT_MODEL_ANIMATION := preload("res://scripts/ant_events/ant_model_animation.gd")
 
 # Emitted when the card's size or resting place changes, so a panel stacked under it
 # (the future "select room" panel) can follow along.
@@ -25,6 +26,10 @@ signal stack_changed(panel_rect: Rect2, stack_top: float)
 # Height of the live ant preview above the name
 @export var preview_height: float = 50.0
 @export var preview_model_scale: float = 0.17
+# Zooms the preview camera in. The camera fits the whole ant automatically, so this is the
+# knob for making the ant look bigger in the card. Above about 1.1 the tips may touch
+# the edge of the preview.
+@export var preview_zoom: float = 1.0
 @export var margin: float = 0.0
 @export var slide_time: float = 0.25
 @export var background_color: Color = Color(0.06, 0.08, 0.05, 0.78)
@@ -237,6 +242,12 @@ func _build_preview() -> void:
 	_preview_viewport.add_child(_preview_pivot)
 	_preview_pivot.add_child(ANT_MODEL.instantiate())
 
+	# The block ant has no clips, so the same procedural animator as in the level gives
+	# the preview its breathing and looking around
+	var animator := ANT_MODEL_ANIMATION.new()
+	animator.name = "AntModelAnimation"
+	_preview_pivot.add_child(animator)
+
 	_preview_player = _preview_pivot.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	if _preview_player != null and not _preview_player.get_animation_list().is_empty():
 		var clip: String = _preview_player.get_animation_list()[0]
@@ -284,7 +295,7 @@ func _frame_preview() -> void:
 
 	var camera := Camera3D.new()
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-	camera.size = maxf(fit, 0.01)
+	camera.size = maxf(fit / maxf(preview_zoom, 0.1), 0.01)
 	camera.near = 0.01
 	camera.far = _preview_radius * 20.0
 	camera.position = eye
@@ -323,6 +334,11 @@ func _update_preview(delta: float) -> void:
 			beat = 5.0
 			bob = 0.040
 			shake = 0.16
+
+	# The preview follows the idle speed set on the ant, so card and level feel the same
+	var ant := _ant as Ant3D
+	if ant != null and action == "":
+		clip_speed *= ant.idle_speed
 
 	if _preview_player != null:
 		# If the model ever gets a real clip per action ("dig", "carry", ...), use it

@@ -43,9 +43,25 @@ const DEFAULT_DIRT := preload("res://assests/world/textures/dirt_dark.png")
 @export var night_ground_tint: Color = Color(0.35, 0.40, 0.55)
 @export var night_ceiling_tint: Color = Color(0.30, 0.28, 0.26)
 @export var night_wall_tint: Color = Color(0.28, 0.25, 0.23)
-# Lights that are a sibling of the backdrop (the sun in the level) are dimmed too
+# Lights that are a sibling of the backdrop are dimmed too
 @export var night_light_energy: float = 0.15
 @export var night_light_color: Color = Color(0.55, 0.65, 1.0)
+
+@export_group("Sun")
+# The DirectionalLight3D beside the backdrop is the sun: set_cycle() turns it in an arc
+@export var sun_follows_cycle: bool = true
+# Height of the sun at noon, in degrees above the horizon
+@export_range(10.0, 89.0) var sun_max_elevation: float = 65.0
+# Turns the whole arc around the level, in degrees. 90 = sunrise at +X, noon at +Z
+@export var sun_azimuth_offset: float = 90.0
+# Colour of the sun when it hangs low, at sunrise and sunset
+@export var sun_sunset_color: Color = Color(1.0, 0.52, 0.22)
+# How low the sun must hang before it is fully orange (in sun height, 1 = noon)
+@export_range(0.05, 0.8) var sun_glow_height: float = 0.35
+# The sun is weaker near the horizon, so sunrise and sunset stay soft
+@export_range(0.0, 1.0) var sun_horizon_energy: float = 0.55
+# The horizon of the sky turns orange along with the low sun
+@export var sunset_sky_horizon_color: Color = Color(0.98, 0.62, 0.34)
 
 @export_group("Underground")
 # Soil plane under the grass. It is only drawn from below, so above ground you never
@@ -68,6 +84,9 @@ var _ground_material: StandardMaterial3D
 var _ceiling_material: StandardMaterial3D
 var _wall_material: StandardMaterial3D
 var _lights: Array[Dictionary] = []
+var _sun: DirectionalLight3D
+var _sun_day_color: Color = Color(1.0, 1.0, 1.0)
+var _sun_day_energy: float = 1.0
 
 func _ready() -> void:
 	var height := _surface_height()
@@ -81,13 +100,10 @@ func _ready() -> void:
 func _surface_height() -> float:
 	if surface_height >= 0.0:
 		return surface_height
-	var parent := get_parent()
-	if parent != null:
-		for node in parent.get_children():
-			var level = node.get("level")
-			if level is LevelData:
-				return float(level.surface_y) + 1.0
-	return float(Level01.SURFACE_Y) + 1.0
+	var level := LevelData.find_sibling(self)
+	if level != null:
+		return float(level.surface_y) + 1.0
+	return float(Level01.surface_y()) + 1.0
 
 func _build_environment() -> void:
 	var sky_material := ProceduralSkyMaterial.new()
@@ -188,7 +204,8 @@ func _build_wall(height: float) -> void:
 	add_child(wall)
 	_wall_material = material
 
-# Remembers the lights around the backdrop, so the night can dim them
+# Remembers the lights around the backdrop, so the night can dim them. The first
+# directional light becomes the sun, which is turned by set_cycle().
 func _collect_lights() -> void:
 	_lights.clear()
 	var parent := get_parent()
@@ -198,35 +215,75 @@ func _collect_lights() -> void:
 		var light := node as Light3D
 		if light == null:
 			continue
+		var directional := light as DirectionalLight3D
+		if directional != null and _sun == null:
+			_sun = directional
+			_sun_day_color = directional.light_color
+			_sun_day_energy = directional.light_energy
+			continue
 		_lights.append({
 			"node": light,
 			"energy": light.light_energy,
 			"color": light.light_color,
 		})
 
+# Called every frame by the day/night clock. sun_angle: 0 = sunrise, PI/2 = noon,
+# PI = sunset, 3PI/2 = midnight.
+func set_cycle(night_amount: float, sun_angle: float) -> void:
+	var night := clampf(night_amount, 0.0, 1.0)
+	var height := sin(sun_angle)
+	var glow := 0.0
+	if _sun != null and sun_follows_cycle:
+		glow = 1.0 - smoothstep(0.0, sun_glow_height, absf(height))
+	_apply_lighting(night, glow * (1.0 - night))
+	_update_sun(sun_angle, night, glow)
+
 # 0 = full day, 1 = full night. Blends the sky, the fog, the ambient light, the ground
-# and the sun between the day and the night values.
+# and the other lights between the day and the night values.
 func set_night_amount(amount: float) -> void:
-	amount = clampf(amount, 0.0, 1.0)
+	_apply_lighting(clampf(amount, 0.0, 1.0), 0.0)
+
+func _apply_lighting(night: float, horizon_glow: float) -> void:
 	if _sky_material != null:
-		_sky_material.sky_top_color = sky_top_color.lerp(night_sky_top_color, amount)
-		_sky_material.sky_horizon_color = sky_horizon_color.lerp(night_sky_horizon_color, amount)
+		_sky_material.sky_top_color = sky_top_color.lerp(night_sky_top_color, night)
+		var horizon := sky_horizon_color.lerp(night_sky_horizon_color, night)
+		_sky_material.sky_horizon_color = horizon.lerp(sunset_sky_horizon_color, horizon_glow)
 	if _environment != null:
-		_environment.ambient_light_energy = lerpf(ambient_energy, night_ambient_energy, amount)
-		_environment.fog_light_color = fog_color.lerp(night_fog_color, amount)
-		_environment.fog_density = lerpf(fog_density, night_fog_density, amount)
+		_environment.ambient_light_energy = lerpf(ambient_energy, night_ambient_energy, night)
+		_environment.fog_light_color = fog_color.lerp(night_fog_color, night)
+		_environment.fog_density = lerpf(fog_density, night_fog_density, night)
 	if _ground_material != null:
-		_ground_material.albedo_color = ground_tint.lerp(night_ground_tint, amount)
+		_ground_material.albedo_color = ground_tint.lerp(night_ground_tint, night)
 	if _ceiling_material != null:
-		_ceiling_material.albedo_color = ceiling_tint.lerp(night_ceiling_tint, amount)
+		_ceiling_material.albedo_color = ceiling_tint.lerp(night_ceiling_tint, night)
 	if _wall_material != null:
-		_wall_material.albedo_color = wall_tint.lerp(night_wall_tint, amount)
+		_wall_material.albedo_color = wall_tint.lerp(night_wall_tint, night)
 	for entry in _lights:
 		var light := entry["node"] as Light3D
 		if light == null:
 			continue
-		light.light_energy = lerpf(float(entry["energy"]), night_light_energy, amount)
-		light.light_color = (entry["color"] as Color).lerp(night_light_color, amount)
+		light.light_energy = lerpf(float(entry["energy"]), night_light_energy, night)
+		light.light_color = (entry["color"] as Color).lerp(night_light_color, night)
+
+# Turns the sun along its arc and gives it the warm colour of a low sun. It never goes
+# under the ground: at night the same arc is followed above the horizon, as moonlight.
+func _update_sun(sun_angle: float, night: float, glow: float) -> void:
+	if _sun == null:
+		return
+	if not sun_follows_cycle:
+		_sun.light_energy = lerpf(_sun_day_energy, night_light_energy, night)
+		_sun.light_color = _sun_day_color.lerp(night_light_color, night)
+		return
+	var height := sin(sun_angle)
+	var elevation := absf(height) * sun_max_elevation
+	# 90 = sunrise at +X, 0 = noon at +Z, -90 = sunset at -X
+	var azimuth := sun_azimuth_offset - rad_to_deg(sun_angle)
+	_sun.rotation_degrees = Vector3(-elevation, azimuth, 0.0)
+	var color := _sun_day_color.lerp(sun_sunset_color, glow)
+	_sun.light_color = color.lerp(night_light_color, night * night)
+	var energy := lerpf(_sun_day_energy, night_light_energy, night)
+	energy *= lerpf(sun_horizon_energy, 1.0, smoothstep(0.0, sun_glow_height, absf(height)))
+	_sun.light_energy = energy
 
 # Unshaded soil, drawn from the inside only: invisible above ground, dark underground
 func _soil_material(tint: Color) -> StandardMaterial3D:

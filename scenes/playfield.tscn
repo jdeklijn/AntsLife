@@ -21,7 +21,7 @@
 [ext_resource type="Resource" uid="uid://dihd3crqnmv40" path="res://scripts/ant_events/defend.tres" id="17_defend"]
 [ext_resource type="Script" uid="uid://bf1awcy1v2pge" path="res://scripts/ant_events/ant_info_panel.gd" id="18_info"]
 [ext_resource type="Script" uid="uid://bnj485o5bvn0r" path="res://scripts/core/world_backdrop.gd" id="19_backdrop"]
-[ext_resource type="Script" path="res://scripts/gameplay/gui/level_sidebar.gd" id="20_sidebar"]
+[ext_resource type="Script" uid="uid://hvcbb7iycbo2" path="res://scripts/gameplay/gui/level_sidebar.gd" id="20_sidebar"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_5a21b"]
 
@@ -60,6 +60,7 @@ left_arrow = ExtResource("13_02pas")
 right_arrow = ExtResource("14_huw7b")
 
 [node name="Ant" parent="." unique_id=1539797722 instance=ExtResource("12_ant3d")]
+idle_speed = 0.2
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1132556764]
 
@@ -74,9 +75,10 @@ actions = Array[ExtResource("14_action")]([ExtResource("15_carry"), ExtResource(
 [node name="AntInfoPanel" type="CanvasLayer" parent="." unique_id=360145599]
 layer = 0
 script = ExtResource("18_info")
+preview_zoom = 2.1
 
-[node name="LevelSidebar" type="CanvasLayer" parent="."]
+[node name="LevelSidebar" type="CanvasLayer" parent="." unique_id=698487447]
 layer = 2
 script = ExtResource("20_sidebar")
 
-[connection signal="cycle_changed" from="LevelSidebar" to="Backdrop" method="set_night_amount"]
+[connection signal="cycle_changed" from="LevelSidebar" to="Backdrop" method="set_cycle"]

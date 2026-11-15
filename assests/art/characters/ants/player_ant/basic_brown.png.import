@@ -2,24 +2,20 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b3jufchykiqek"
-path.s3tc="res://.godot/imported/3d-block-ant_7.png-e5aa24e60ea0af55fd15d789a6c7b16b.s3tc.ctex"
+uid="uid://fn7pk2qduo4m"
+path="res://.godot/imported/basic_brown.png-6a391d0140640d5e59cd7ffd18ff931a.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
-generator_parameters={
-"md5": "d380652feaea56ac9a295b245382d0ac"
+"vram_texture": false
 }
 
 [deps]
 
-source_file="res://assests/art/characters/ants/player_ant/3d-block-ant_7.png"
-dest_files=["res://.godot/imported/3d-block-ant_7.png-e5aa24e60ea0af55fd15d789a6c7b16b.s3tc.ctex"]
+source_file="res://assests/art/characters/ants/player_ant/basic_brown.png"
+dest_files=["res://.godot/imported/basic_brown.png-6a391d0140640d5e59cd7ffd18ff931a.ctex"]
 
 [params]
 
-compress/mode=2
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -27,7 +23,7 @@ compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=true
+mipmaps/generate=false
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""
@@ -41,4 +37,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=0
+detect_3d/compress_to=1

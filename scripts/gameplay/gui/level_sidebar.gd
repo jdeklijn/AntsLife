@@ -16,13 +16,15 @@ extends CanvasLayer
 # The day turned into night or back again. Hook gameplay up to this (ants that sleep,
 # for example); the sky follows the smooth value of cycle_changed.
 signal phase_changed(is_day: bool)
-# How dark it is, once per frame while it changes: 0 = full day, 1 = full night
-signal cycle_changed(night_amount: float)
+# How dark it is and where the sun is: night_amount 0 = full day, 1 = full night;
+# sun_angle 0 = sunrise, PI/2 = noon, PI = sunset, 3PI/2 = midnight
+signal cycle_changed(night_amount: float, sun_angle: float)
+# A new day started, counted from starting_day
+signal day_changed(day: int)
 # The save button was pressed. The real save system is not there yet.
 signal save_requested
 
 const FONT = preload("res://assests/ui/fonts/Nunito/Nunito-VariableFont_wght.ttf")
-const MAIN_MENU_SCENE := "res://scenes/main_scene.tscn"
 
 # The resources, in the order they are shown. Add or remove entries and the rows follow.
 const RESOURCE_LIST: Array[Dictionary] = [
@@ -60,9 +62,14 @@ const RESOURCE_LIST: Array[Dictionary] = [
 @export var day_length: float = 240.0
 # Part of the cycle that is day (0.5 = half day, half night)
 @export_range(0.1, 0.9) var day_share: float = 0.5
-# Part of the cycle used to fade from day to night and back
-@export_range(0.0, 0.3) var twilight: float = 0.08
+# How far the sun must be above or below the horizon before it is fully day or night.
+# 0.25 is about 14 degrees of sun height, which gives a real twilight.
+@export_range(0.02, 0.8) var twilight_height: float = 0.25
 @export var start_at_day: bool = true
+# The first day of the level, shown in the card and counted up at every new morning
+@export var starting_day: int = 1
+# Where "Main menu" and "Quit" go: the screen with the sandbox entrance
+@export_file("*.tscn") var start_scene: String = "res://scenes/main_scene.tscn"
 
 @export_group("Colours")
 @export var background_color: Color = Color(0.06, 0.08, 0.05, 0.78)
@@ -75,46 +82,62 @@ var _resources_panel: PanelContainer
 var _controls_panel: PanelContainer
 var _phase_picture: TextureRect
 var _phase_label: Label
+var _day_label: Label
 var _amount_labels: Dictionary = {}
 var _amounts: Dictionary = {}
 
 var _time: float = 0.0
 var _is_day: bool = true
 var _night_amount: float = 0.0
+var _day: int = 1
 
 func _ready() -> void:
 	layer = 2
 	_build()
-	_time = 0.0 if start_at_day else day_length * day_share
-	if day_length > 0.0:
-		_night_amount = _night_for(_time / day_length)
-	_is_day = _night_amount < 0.5
+	_set_day(starting_day, false)
+	# A day starts at dawn, a night in the middle of the night
+	_time = 0.0 if start_at_day else day_length * (day_share + (1.0 - day_share) * 0.5)
+	var angle := _sun_angle_for(_time / day_length) if day_length > 0.0 else 0.0
+	_night_amount = _night_amount_for(angle)
+	_is_day = _night_amount <= 0.5
 	_set_phase(_is_day, false)
 	get_viewport().size_changed.connect(_layout)
 	_layout()
 	# The sky may already have to start dark, if the level starts at night
-	cycle_changed.emit(_night_amount)
+	cycle_changed.emit(_night_amount, angle)
 
 func _process(delta: float) -> void:
 	if day_length <= 0.0:
 		return
+	var previous := _time
 	_time = fmod(_time + delta, day_length)
-	var night := _night_for(_time / day_length)
-	if absf(night - _night_amount) > 0.002:
-		_night_amount = night
-		cycle_changed.emit(night)
-	var day := night < 0.5
+	# The clock wrapped around: a new day starts
+	if _time < previous:
+		_set_day(_day + 1, true)
+	var angle := _sun_angle_for(_time / day_length)
+	var night := _night_amount_for(angle)
+	_night_amount = night
+	# Every frame, because the sun has to move along its arc
+	cycle_changed.emit(night, angle)
+	var day := night <= 0.5
 	if day != _is_day:
 		_is_day = day
 		_set_phase(day, true)
 
-# 0 = full day, 1 = full night. The fade sits at the end of the day and the end of the
-# night, so the sky turns gradually instead of snapping.
-func _night_for(t: float) -> float:
-	var dusk := clampf(twilight, 0.0, minf(day_share, 1.0 - day_share))
+# Where the sun is in its arc: 0 = sunrise, PI/2 = noon, PI = sunset, 3PI/2 = midnight.
+# The day and the night each take their own part of the cycle, so day_share still works.
+func _sun_angle_for(t: float) -> float:
+	if day_share <= 0.0:
+		return 0.0
 	if t < day_share:
-		return smoothstep(day_share - dusk, day_share, t)
-	return 1.0 - smoothstep(1.0 - dusk, 1.0, t)
+		return PI * (t / day_share)
+	return PI + PI * ((t - day_share) / maxf(1.0 - day_share, 0.001))
+
+# 0 = full day, 1 = full night. It fades around the horizon, so the sky darkens exactly
+# while the sun goes under and brightens again while it comes up.
+func _night_amount_for(angle: float) -> float:
+	var edge := maxf(twilight_height, 0.001)
+	return 1.0 - smoothstep(-edge, edge, sin(angle))
 
 # ---- Building ----
 
@@ -135,9 +158,20 @@ func _build_day_panel() -> void:
 	_phase_picture.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	column.add_child(_phase_picture)
 
+	# Day counter on the left, phase on the right
+	var phase_row := HBoxContainer.new()
+	phase_row.add_theme_constant_override("separation", 8)
+	column.add_child(phase_row)
+
+	_day_label = _make_label(15, text_color)
+	_day_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_day_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	phase_row.add_child(_day_label)
+
 	_phase_label = _make_label(17, title_color)
-	_phase_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	column.add_child(_phase_label)
+	_phase_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_phase_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	phase_row.add_child(_phase_label)
 
 	var line := ColorRect.new()
 	line.color = Color(accent_color.r, accent_color.g, accent_color.b, 0.35)
@@ -342,6 +376,16 @@ func _set_phase(is_day: bool, announce: bool) -> void:
 	if announce:
 		phase_changed.emit(is_day)
 
+func _set_day(day: int, announce: bool) -> void:
+	_day = day
+	if _day_label != null:
+		_day_label.text = "Day %d" % day
+	if announce:
+		day_changed.emit(day)
+
+func get_day() -> int:
+	return _day
+
 func is_day() -> bool:
 	return _is_day
 
@@ -366,10 +410,15 @@ func get_resource_amount(id: String) -> int:
 
 # ---- Bottom card ----
 
+# Both buttons leave the level for the start screen. When there is a real in-game menu,
+# "Main menu" can open that instead.
 func _on_main_menu() -> void:
-	Engine.time_scale = 1.0
-	get_tree().paused = false
-	get_tree().change_scene_to_file(MAIN_MENU_SCENE)
+	_go_to_start()
 
 func _on_quit() -> void:
-	get_tree().quit()
+	_go_to_start()
+
+func _go_to_start() -> void:
+	Engine.time_scale = 1.0
+	get_tree().paused = false
+	get_tree().change_scene_to_file(start_scene)

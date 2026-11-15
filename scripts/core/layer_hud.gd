@@ -13,8 +13,9 @@ signal layers_changed(peeled: Dictionary)
 @export var closed_grey_eye: Texture2D    # switched off, and it cannot be switched on yet (passive)
 
 # At most this many eyes are shown per set, so at most this many layers per face can be
-# shown. The eyes fade from full opacity to min_opacity.
-@export var max_eyes: int = 10
+# shown. The eyes fade from full opacity to min_opacity. Keep this at least as large as
+# the deepest level, or the deepest layers cannot be switched off.
+@export var max_eyes: int = 20
 @export var min_opacity: float = 0.35
 # The size of one eye, in pixels. Its board scales along with it.
 @export var column_eye_size: Vector2 = Vector2(44, 44)
@@ -87,6 +88,7 @@ const LEFT_FACES := [Face.LEFT, Face.BACK, Face.RIGHT, Face.FRONT]
 const TOP_VIEW_UP_FACES := [Face.BACK, Face.RIGHT, Face.FRONT, Face.LEFT]
 const BOTTOM_VIEW_UP_FACES := [Face.FRONT, Face.LEFT, Face.BACK, Face.RIGHT]
 
+var _level: LevelData             # the level that is loaded, taken from the level view
 var _peeled := {}                 # face -> number of switched-off layers
 var _view_name := "front"
 var _view_index := 0
@@ -128,6 +130,9 @@ func _ready() -> void:
 	closed_grey_eye = _cropped(closed_grey_eye)
 	for face in Face.values():
 		_peeled[face] = 0
+	# Follow the size and the surface of the level that the level view built, so the eyes
+	# work for any level size without a constant per level
+	_level = _find_level()
 	# The signs sit in their own layer under the eyes. The eyes are rebuilt on every view
 	# change, the signs are not, so they keep their place.
 	_sign_root = Control.new()
@@ -226,19 +231,29 @@ func _max_peel(face: int) -> int:
 	var opposite_peeled: int = _peeled[_opposite(face)]
 	return mini(_layer_count(face) - 1 - opposite_peeled, max_eyes)
 
-# ---- The geometry of the block (the 10 x 12 x 10 test level) ----
+# ---- The geometry of the block ----
+
+# The level data lives on the level view beside this HUD, which may build it a moment
+# before or after this node, so it is looked up here and cached on first use.
+func _find_level() -> LevelData:
+	var level := LevelData.find_sibling(self)
+	return level if level != null else Level01.build()
 
 func _size() -> Vector3:
-	return Vector3(Level01.SIZE)
+	if _level == null:
+		_level = _find_level()
+	return Vector3(_level.size)
 
 # The number of layers between a face and its opposite face. Above the grass is air.
 func _layer_count(face: int) -> int:
+	if _level == null:
+		_level = _find_level()
 	match face:
 		Face.FRONT, Face.BACK:
-			return Level01.SIZE.z
+			return _level.size.z
 		Face.LEFT, Face.RIGHT:
-			return Level01.SIZE.x
-	return Level01.SURFACE_Y + 1
+			return _level.size.x
+	return _level.surface_y + 1
 
 func _opposite(face: int) -> int:
 	match face:
@@ -259,10 +274,12 @@ func _face_axis(face: int) -> int:
 
 # The coordinate of the face along its axis (world z is the negative of the level z)
 func _face_plane(face: int) -> float:
+	if _level == null:
+		_level = _find_level()
 	match face:
 		Face.BACK: return -_size().z
 		Face.RIGHT: return _size().x
-		Face.TOP: return float(Level01.SURFACE_Y + 1)
+		Face.TOP: return float(_level.surface_y + 1)
 	return 0.0
 
 # The direction from the face into the block

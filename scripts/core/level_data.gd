@@ -25,6 +25,21 @@ func in_bounds(p: Vector3i) -> bool:
 	return p.x >= 0 and p.y >= 0 and p.z >= 0 \
 		and p.x < size.x and p.y < size.y and p.z < size.z
 
+# Finds the level that a sibling of `node` built (the level view keeps it in `level`).
+# Code that depends on the level size looks it up this way, so a level can change size
+# without a constant that has to be edited in several scripts.
+static func find_sibling(node: Node) -> LevelData:
+	if node == null:
+		return null
+	var parent := node.get_parent()
+	if parent == null:
+		return null
+	for sibling in parent.get_children():
+		var level = sibling.get("level")
+		if level is LevelData:
+			return level
+	return null
+
 # Turns a 3D position into a position in the flat array.
 # One layer (a fixed z) is size.x * size.y consecutive bytes.
 func _index(p: Vector3i) -> int:
