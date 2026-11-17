@@ -1,0 +1,52 @@
+[gd_scene format=3 uid="uid://dr1ux6o6f663u"]
+
+[ext_resource type="FontFile" uid="uid://b78ndfxabn2ge" path="res://assets/ui/fonts/Nunito/Nunito-VariableFont_wght.ttf" id="1_kplmn"]
+[ext_resource type="Theme" uid="uid://g74fe34o4g3d" path="res://assets/themes/ui_theme.tres" id="2_fnge6"]
+[ext_resource type="Script" uid="uid://co4wyunrss0oq" path="res://scripts/ui/quit_game_btn.gd" id="3_a45jx"]
+
+[sub_resource type="Theme" id="Theme_55n3y"]
+default_font = ExtResource("1_kplmn")
+default_font_size = 12
+
+[sub_resource type="Theme" id="Theme_epk7b"]
+
+[node name="GameMenu" type="Control" unique_id=800735734]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_55n3y")
+
+[node name="MainViewContainer" type="HBoxContainer" parent="." unique_id=499563330]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_epk7b")
+
+[node name="PanelLeft" type="Control" parent="MainViewContainer" unique_id=2003652167]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PanelMiddle" type="Control" parent="MainViewContainer" unique_id=322190119]
+layout_mode = 2
+
+[node name="PanelRight" type="Control" parent="MainViewContainer" unique_id=766046763]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MainViewContainer/PanelRight" unique_id=325220469]
+layout_mode = 0
+offset_left = -574.0
+offset_right = -4.0
+offset_bottom = 648.0
+
+[node name="ButtonQuitGame" type="Button" parent="MainViewContainer/PanelRight/VBoxContainer" unique_id=1437071015]
+unique_name_in_owner = true
+layout_mode = 2
+theme = ExtResource("2_fnge6")
+text = "Quit Game"
+script = ExtResource("3_a45jx")

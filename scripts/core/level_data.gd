@@ -15,11 +15,18 @@ var size: Vector3i
 # The y of the top soil row (the grass). Rows above it are open air.
 var surface_y: int = 0
 var cells: PackedByteArray
+# Cells that may not be taken away, drawn with a red edge. One flag per cell.
+var forbidden_cells: PackedByteArray
+# Goes up whenever a forbidden flag changes, so the level view knows to rebuild its red
+# edges. Compare it with the last value you saw instead of polling every cell.
+var forbidden_version: int = 0
 
 func _init(p_size: Vector3i = Vector3i(10, 10, 10)) -> void:
 	size = p_size
 	cells = PackedByteArray()
 	cells.resize(size.x * size.y * size.z)  # every cell starts as EMPTY (0)
+	forbidden_cells = PackedByteArray()
+	forbidden_cells.resize(size.x * size.y * size.z)  # every cell starts as allowed (0)
 
 func in_bounds(p: Vector3i) -> bool:
 	return p.x >= 0 and p.y >= 0 and p.z >= 0 \
@@ -53,6 +60,21 @@ func get_cell(p: Vector3i) -> int:
 func set_cell(p: Vector3i, type: int) -> void:
 	if in_bounds(p):
 		cells[_index(p)] = type
+
+# A forbidden cell stays in the level but may not be dug away. The level view draws a
+# light red edge around it, so a rule can show itself without touching the block itself.
+func is_forbidden(p: Vector3i) -> bool:
+	return in_bounds(p) and forbidden_cells[_index(p)] != 0
+
+func set_forbidden(p: Vector3i, value: bool = true) -> void:
+	if not in_bounds(p):
+		return
+	var index := _index(p)
+	var flag := 1 if value else 0
+	if forbidden_cells[index] == flag:
+		return
+	forbidden_cells[index] = flag
+	forbidden_version += 1
 
 # Sets every cell in the box from..to (both corners included)
 func fill_box(from: Vector3i, to: Vector3i, type: int) -> void:
