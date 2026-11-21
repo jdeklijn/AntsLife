@@ -19,6 +19,8 @@ config/icon="res://icon.svg"
 
 Events="*uid://dswd4odaw1uue"
 Ants="*res://scripts/core/ant_registry.gd"
+Colony="*res://scripts/core/colony.gd"
+SaveGame="*res://scripts/core/save_game.gd"
 
 [display]
 

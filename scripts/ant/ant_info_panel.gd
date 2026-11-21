@@ -6,7 +6,7 @@ extends CanvasLayer
 
 const FONT = preload("res://assets/ui/fonts/Nunito/Nunito-VariableFont_wght.ttf")
 const PENCIL_PATH := "res://assets/ui/icons/pencil.svg"
-const ANT_MODEL := preload("res://assets/characters/ants/player_ant/ant_v3_compleet.gltf")
+const ANT_MODEL := preload("res://assets/characters/ants/player_ant/ant_v4.glb")
 const ANT_MODEL_ANIMATION := preload("res://scripts/ant/ant_model_animation.gd")
 
 # Emitted when the card's size or resting place changes, so a panel stacked under it

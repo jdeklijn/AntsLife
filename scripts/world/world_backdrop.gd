@@ -10,7 +10,7 @@ extends Node3D
 # The ground and the level share the calmest grass texture, so the plain continues the
 # grass on top of the blocks without a pattern that starts to shimmer at a distance.
 const DEFAULT_GRASS := preload("res://assets/world/textures/grass_b.png")
-const DEFAULT_DIRT := preload("res://assets/world/textures/dirt_a.png")
+const DEFAULT_GRANITE := preload("res://assets/world/textures/granite.png")
 
 # Height of the grass surface. Negative means: read it from the level.
 # Set it to the level's surface_y for a plain at the grass/soil border instead.
@@ -26,15 +26,15 @@ const DEFAULT_DIRT := preload("res://assets/world/textures/dirt_a.png")
 @export_group("Sky")
 @export var sky_top_color: Color = Color(0.36, 0.58, 0.88)
 @export var sky_horizon_color: Color = Color(0.78, 0.87, 0.95)
-# Below the horizon the sky hemisphere is painted as soil, so looking under the
-# ground shows earth instead of more sky
-@export var underground_horizon_color: Color = Color(0.24, 0.17, 0.12)
-@export var underground_bottom_color: Color = Color(0.07, 0.05, 0.035)
+# Below the horizon the sky hemisphere is painted as rock, so a view from under the plain
+# shows stone instead of more sky
+@export var underground_horizon_color: Color = Color(0.20, 0.21, 0.25)
+@export var underground_bottom_color: Color = Color(0.06, 0.06, 0.08)
 @export var ambient_energy: float = 0.8
 @export var fog_density: float = 0.002
-# Fog in soil colors, so the distance never turns back into sky blue (which is what
+# Fog in granite colours, so the distance never turns back into sky blue (which is what
 # you would see underground)
-@export var fog_color: Color = Color(0.26, 0.19, 0.13)
+@export var fog_color: Color = Color(0.21, 0.22, 0.26)
 
 @export_group("Night")
 # The same colours, but for the night. set_night_amount() blends between the day value
@@ -45,8 +45,7 @@ const DEFAULT_DIRT := preload("res://assets/world/textures/dirt_a.png")
 @export var night_fog_color: Color = Color(0.05, 0.06, 0.10)
 @export var night_fog_density: float = 0.003
 @export var night_ground_tint: Color = Color(0.35, 0.40, 0.55)
-@export var night_ceiling_tint: Color = Color(0.30, 0.28, 0.26)
-@export var night_wall_tint: Color = Color(0.28, 0.25, 0.23)
+@export var night_ceiling_tint: Color = Color(0.32, 0.34, 0.40)
 # Lights that are a sibling of the backdrop are dimmed too
 @export var night_light_energy: float = 0.15
 @export var night_light_color: Color = Color(0.55, 0.65, 1.0)
@@ -67,26 +66,68 @@ const DEFAULT_DIRT := preload("res://assets/world/textures/dirt_a.png")
 # The horizon of the sky turns orange along with the low sun
 @export var sunset_sky_horizon_color: Color = Color(0.98, 0.62, 0.34)
 
-@export_group("Underground")
-# Soil plane under the grass. It is only drawn from below, so above ground you never
-# see it, but under ground it hides the sky and reads as the underside of the soil.
-@export var ceiling_texture: Texture2D = DEFAULT_DIRT
-@export var ceiling_tint: Color = Color(0.60, 0.54, 0.48)
-# How far the soil roof sits below the grass surface
-@export var ceiling_offset: float = 0.05
-# Soil wall around the level, hanging from the grass downwards. Only visible from below
-# the grass. Without it the horizon of the sky stays visible as a thin light stripe,
-# because a horizontal plane can never cover a ray that runs exactly level.
-@export var wall_radius: float = 420.0
-@export var wall_depth: float = 60.0
-@export var wall_tint: Color = Color(0.55, 0.49, 0.43)
-@export var wall_segments: int = 64
+# Rock around the field itself is drawn by the level view: one flat cross-section in the
+# cut plane, so the underground stays a 2D field instead of a cavern with a horizon.
+# The plain above it is a plane: it hides the side of the field from a camera above the
+# surface, and the roof below it hides the sky from a camera under the surface. Both stay
+# in place; only the part of the plain that stands between the camera and the field turns
+# see-through, so the field reads as a window from either side.
+
+# The plain is drawn with this shader instead of a plain material: where the line of sight
+# through a pixel runs on into the level, the plain fades to window_alpha, so the side of
+# the field under it stays visible. The rest of the plain is untouched.
+const GROUND_SHADER_CODE := """
+shader_type spatial;
+render_mode unshaded, blend_mix, cull_back;
+
+uniform sampler2D albedo_texture : source_color, filter_linear_mipmap_anisotropic;
+uniform vec4 tint : source_color = vec4(1.0);
+// The block the level occupies: x0, y0, z0 and x1, y1, z1
+uniform vec3 level_min = vec3(0.0);
+uniform vec3 level_max = vec3(0.0);
+// What stays of the plain over that window: 0.05 = 95% see-through
+uniform float window_alpha = 0.05;
+
+varying vec3 world_pos;
+
+void vertex() {
+	world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+}
+
+// True when the line of sight through this point runs into the level. The ray starts a
+// hair past the point, on the far side of the plain, and must enter the box from outside.
+bool sees_level(vec3 point) {
+	vec3 ray = point - CAMERA_POSITION_WORLD;
+	vec3 start = point + normalize(ray) * 0.001;
+	vec3 dir = ray + vec3(1e-6);
+	vec3 a = (level_min - start) / dir;
+	vec3 b = (level_max - start) / dir;
+	vec3 enter_at = min(a, b);
+	vec3 leave_at = max(a, b);
+	float enter = max(max(enter_at.x, enter_at.y), enter_at.z);
+	float leave = min(min(leave_at.x, leave_at.y), leave_at.z);
+	return enter > 0.0 && leave > enter;
+}
+
+void fragment() {
+	ALBEDO = texture(albedo_texture, UV).rgb * tint.rgb;
+	ALPHA = 1.0;
+	if (any(greaterThan(level_max, level_min)) && sees_level(world_pos)) {
+		ALPHA = window_alpha;
+	}
+}
+"""
 
 var _environment: Environment
 var _sky_material: ProceduralSkyMaterial
-var _ground_material: StandardMaterial3D
+var _ground_material: ShaderMaterial
+var _ground_shader: Shader
+# The plain and the rock roof are each only visible from one side. Keep both, so they
+# can be switched off as soon as the camera is on the other side.
+var _ground: MeshInstance3D
 var _ceiling_material: StandardMaterial3D
-var _wall_material: StandardMaterial3D
+var _ceiling: MeshInstance3D
+var _surface: float = 0.0
 var _lights: Array[Dictionary] = []
 var _sun: DirectionalLight3D
 var _sun_day_color: Color = Color(1.0, 1.0, 1.0)
@@ -94,11 +135,20 @@ var _sun_day_energy: float = 1.0
 
 func _ready() -> void:
 	var height := _surface_height()
+	_surface = height
 	_build_environment()
 	_build_ground(height)
-	_build_ceiling(height)
-	_build_wall(height)
 	_collect_lights()
+
+# Above the grass the plain is visible and below it cannot be seen at all, being a plane
+# seen from underneath. Hide it under the camera, so a huge plane is not submitted to the
+# renderer for nothing and the field is not framed by the plain from below.
+func _process(_delta: float) -> void:
+	var camera := get_viewport().get_camera_3d()
+	if camera == null:
+		return
+	if _ground != null:
+		_ground.visible = camera.global_position.y >= _surface
 
 # In this level the grass is the top cell row, so its surface is surface_y + 1
 func _surface_height() -> float:
@@ -127,7 +177,7 @@ func _build_environment() -> void:
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
 	env.ambient_light_energy = ambient_energy
-	# The far edge of the ground fades into soil-ish haze, so no edge shows
+	# The far edge of the ground fades into rock-ish haze, so no edge shows
 	env.fog_enabled = true
 	env.fog_light_color = fog_color
 	env.fog_density = fog_density
@@ -176,6 +226,7 @@ func _build_ground(height: float) -> void:
 	ground.position = Vector3(0.0, height, 0.0)
 	add_child(ground)
 	_ground_material = material
+	_ground = ground
 
 # One flat quad at the surface, given by its two opposite corners in world x/z. The
 # corners are wound like the top face of a block, so the plain is visible from above,
@@ -199,51 +250,6 @@ func _level_footprint() -> Rect2:
 		return Rect2()
 	return Rect2(Vector2(0.0, float(-level.size.z)),
 		Vector2(float(level.size.x), float(level.size.z)))
-
-# The underside of the ground. The grass plane is single-sided, so from below it is
-# invisible and you would look straight into the sky. This plane is the mirror image
-# of it: drawn only from below, dark soil, so an underground view shows earth overhead.
-func _build_ceiling(height: float) -> void:
-	var plane := PlaneMesh.new()
-	plane.size = Vector2(ground_size, ground_size)
-
-	var material := _soil_material(ceiling_tint)
-	material.uv1_scale = Vector3(ground_size, ground_size, 1.0)
-
-	var ceiling := MeshInstance3D.new()
-	ceiling.name = "SoilCeiling"
-	ceiling.mesh = plane
-	ceiling.material_override = material
-	ceiling.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	ceiling.position = Vector3(0.0, height - ceiling_offset, 0.0)
-	add_child(ceiling)
-	_ceiling_material = material
-
-# Closes off the sky at eye level. The soil ceiling cannot do that: a ray that runs
-# exactly level never meets a horizontal plane, so the sky's horizon stays visible as a
-# thin light stripe beside the level. A cylinder around the level catches those rays.
-func _build_wall(height: float) -> void:
-	var mesh := CylinderMesh.new()
-	mesh.top_radius = wall_radius
-	mesh.bottom_radius = wall_radius
-	mesh.height = wall_depth
-	mesh.radial_segments = maxi(wall_segments, 8)
-	mesh.cap_top = false
-	mesh.cap_bottom = false
-
-	var material := _soil_material(wall_tint)
-	# One texture tile per world unit, like the ground and the blocks
-	material.uv1_scale = Vector3(TAU * wall_radius, wall_depth, 1.0)
-
-	var wall := MeshInstance3D.new()
-	wall.name = "SoilWall"
-	wall.mesh = mesh
-	wall.material_override = material
-	wall.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	# Top edge flush with the soil ceiling, so the two form one closed shell
-	wall.position = Vector3(0.0, height - ceiling_offset - wall_depth * 0.5, 0.0)
-	add_child(wall)
-	_wall_material = material
 
 # Remembers the lights around the backdrop, so the night can dim them. The first
 # directional light becomes the sun, which is turned by set_cycle().
@@ -295,10 +301,6 @@ func _apply_lighting(night: float, horizon_glow: float) -> void:
 		_environment.fog_density = lerpf(fog_density, night_fog_density, night)
 	if _ground_material != null:
 		_ground_material.albedo_color = ground_tint.lerp(night_ground_tint, night)
-	if _ceiling_material != null:
-		_ceiling_material.albedo_color = ceiling_tint.lerp(night_ceiling_tint, night)
-	if _wall_material != null:
-		_wall_material.albedo_color = wall_tint.lerp(night_wall_tint, night)
 	for entry in _lights:
 		var light := entry["node"] as Light3D
 		if light == null:
@@ -325,13 +327,3 @@ func _update_sun(sun_angle: float, night: float, glow: float) -> void:
 	var energy := lerpf(_sun_day_energy, night_light_energy, night)
 	energy *= lerpf(sun_horizon_energy, 1.0, smoothstep(0.0, sun_glow_height, absf(height)))
 	_sun.light_energy = energy
-
-# Unshaded soil, drawn from the inside only: invisible above ground, dark underground
-func _soil_material(tint: Color) -> StandardMaterial3D:
-	var material := StandardMaterial3D.new()
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.albedo_texture = ceiling_texture
-	material.albedo_color = tint
-	material.cull_mode = BaseMaterial3D.CULL_FRONT
-	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
-	return material

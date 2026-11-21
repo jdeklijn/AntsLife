@@ -171,8 +171,14 @@ func _typing_in_a_field() -> bool:
 	var focused := get_viewport().gui_get_focus_owner()
 	return focused is LineEdit or focused is TextEdit
 
-func _unhandled_input(event: InputEvent) -> void:
+# Caps Lock switches the eyes on and off; Shift shows them while it is held. F and V
+# switch layers off (Alt+F / Alt+V puts them back). These keys run in _input, before the
+# camera and the dig tool, so they keep working while the left mouse button is held to
+# dig. While a name is being typed they are just letters.
+func _input(event: InputEvent) -> void:
 	if _root == null:
+		return
+	if _typing_in_a_field():
 		return
 	var key_event := event as InputEventKey
 	if key_event == null or not key_event.pressed or key_event.echo:
@@ -181,17 +187,19 @@ func _unhandled_input(event: InputEvent) -> void:
 		_toggled_on = not _toggled_on
 		get_viewport().set_input_as_handled()
 		return
-	# F and V only work while the eyes are on screen, so a hidden layer cannot change
-	if not _eyes_showing():
-		return
 	var face := -1
 	match key_event.keycode:
 		KEY_F: face = _up_face    # the column of eyes
 		KEY_V: face = _near_face  # the diagonal of eyes
 	if face == -1:
 		return
+	# A layer key while the eyes are hidden turns them on first, so the player sees
+	# which layer just went away and can put it back with Alt.
+	if not _eyes_showing():
+		_toggled_on = true
 	# F / V switches the next layer off, Alt+F / Alt+V switches the last one on again
 	_apply(face, EyeAction.RESTORE if key_event.alt_pressed else EyeAction.PEEL)
+	get_viewport().set_input_as_handled()
 
 func _on_view_changed(view_name: String, view_index: int = 0) -> void:
 	_view_name = view_name

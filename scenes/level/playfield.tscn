@@ -23,6 +23,7 @@
 [ext_resource type="Script" uid="uid://bnj485o5bvn0r" path="res://scripts/world/world_backdrop.gd" id="19_backdrop"]
 [ext_resource type="Script" uid="uid://hvcbb7iycbo2" path="res://scripts/ui/level_sidebar.gd" id="20_sidebar"]
 [ext_resource type="Script" uid="uid://drdyq7gucv4mk" path="res://scripts/world/grass_field.gd" id="21_grass"]
+[ext_resource type="Script" uid="uid://d088eyl1hhhup" path="res://scripts/level/dig_tool.gd" id="22_dig"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_5a21b"]
 
@@ -33,6 +34,7 @@ mesh = SubResource("BoxMesh_5a21b")
 script = ExtResource("1_4hh8h")
 grass_texture = ExtResource("2_nvc26")
 dirt_texture = ExtResource("3_imw4w")
+mine_wall_tile_blocks = 2.0
 
 [node name="Grass" type="MultiMeshInstance3D" parent="MeshInstance3D" unique_id=1893621947]
 script = ExtResource("21_grass")
@@ -44,6 +46,7 @@ transform = Transform3D(0.8660254, 0.35355338, -0.35355338, 0, 0.70710677, 0.707
 transform = Transform3D(1, 0, 0, 0, 0.96592575, 0.258819, 0, -0.258819, 0.9659257, 5, 12, 20)
 fov = 20.0
 script = ExtResource("4_i74au")
+min_fov = 1.5
 side_pitch_degrees = 10.0
 
 [node name="Backdrop" type="Node3D" parent="." unique_id=1534663416]
@@ -86,6 +89,10 @@ preview_zoom = 2.1
 layer = 2
 script = ExtResource("20_sidebar")
 
-[connection signal="cycle_changed" from="LevelSidebar" to="Backdrop" method="set_cycle"]
+[node name="DigTool" type="CanvasLayer" parent="." unique_id=1631014388]
+layer = 2
+script = ExtResource("22_dig")
+
 [connection signal="cycle_changed" from="LevelSidebar" to="MeshInstance3D" method="set_cycle"]
 [connection signal="cycle_changed" from="LevelSidebar" to="MeshInstance3D/Grass" method="set_cycle"]
+[connection signal="cycle_changed" from="LevelSidebar" to="Backdrop" method="set_cycle"]

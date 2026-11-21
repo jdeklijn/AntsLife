@@ -28,14 +28,16 @@ signal day_changed(day: int)
 signal save_requested
 
 const FONT = preload("res://assets/ui/fonts/Nunito/Nunito-VariableFont_wght.ttf")
-const ANT_MODEL := preload("res://assets/characters/ants/player_ant/ant_v3_compleet.gltf")
+const ANT_MODEL := preload("res://assets/characters/ants/player_ant/ant_v4.glb")
+const ANT_MODEL_ANIMATION := preload("res://scripts/ant/ant_model_animation.gd")
 const GRANITE := preload("res://assets/world/textures/granite.png")
 
 # The little 3D scene in the day card: a granite footpath with the ant on top.
 # The slab is longer than the card, so the road runs off both sides.
 const ROAD_SIZE := Vector3(8.0, 0.34, 1.2)
-# The same ant model as in the level, scaled so it fits on the road
-const ANT_SCALE := 0.5
+# The same ant model as in the level. The model is 2.0 units tall, so this brings it to
+# about 0.42 on the road, the size the block ant had here before
+const ANT_SCALE := 0.21
 # How much of the little world is shown from top to bottom, in world units
 const ROAD_VIEW_HEIGHT := 1.28
 # The camera looks down on the road, so the top surface and the ant on it are visible
@@ -43,7 +45,7 @@ const ROAD_CAMERA_ELEVATION := 20.0
 
 # The resources, in the order they are shown. Add or remove entries and the rows follow.
 const RESOURCE_LIST: Array[Dictionary] = [
-	{"id": "dirt", "name": "Dirt", "icon": "res://assets/ui/levels/resources/rsc_dirt_icoon.png"},
+	{"id": "sand", "name": "Sand", "icon": "res://assets/ui/levels/resources/rsc_dirt_icoon.png"},
 	{"id": "rock", "name": "Rock", "icon": "res://assets/ui/levels/resources/rsc_rock_icoon.png"},
 	{"id": "wood", "name": "Wood", "icon": "res://assets/ui/levels/resources/rsc_wood_icoon.png"},
 	{"id": "leaves", "name": "Leaves", "icon": "res://assets/ui/levels/resources/rsc_leaves_icoon.png"},
@@ -125,6 +127,11 @@ var _ant_yaw: float = -PI * 0.5
 func _ready() -> void:
 	layer = 2
 	_build()
+	# The colony owns the amounts; the panel only shows them
+	if is_instance_valid(Colony):
+		Colony.changed.connect(_on_resource_changed)
+		Colony.all_changed.connect(_refresh_resources)
+	_refresh_resources()
 	# The game starts at normal speed and running, whatever the previous scene left behind
 	_speed = 1
 	_paused = false
@@ -349,15 +356,41 @@ func _build_road_view(view_size: Vector2i) -> void:
 	_ant_pivot.rotation.y = _ant_yaw
 	_ant_pivot.scale = Vector3.ONE * ANT_SCALE
 	_ant_root.add_child(_ant_pivot)
-	_ant_pivot.add_child(ANT_MODEL.instantiate())
+	# The model has its head along +Z, so a half turn puts it the way the pivot expects
+	# (head along -Z) and it walks the road the way it looks
+	var road_ant := ANT_MODEL.instantiate() as Node3D
+	road_ant.rotation.y = PI
+	_ant_pivot.add_child(road_ant)
+
+	# A small light on the ant, like the one it carries in the level, so the dark model
+	# also reads on the stones. Only the ant is on this layer, so the road stays as it is.
+	var ant_light := SpotLight3D.new()
+	ant_light.name = "AntLight"
+	ant_light.position = Vector3(0.0, 1.3, 0.0)
+	ant_light.rotation_degrees = Vector3(-90.0, 0.0, 0.0)
+	ant_light.light_color = Color(1.0, 0.95, 0.86)
+	ant_light.light_energy = 5.0
+	ant_light.spot_range = 3.0
+	ant_light.spot_angle = 60.0
+	ant_light.light_cull_mask = 2
+	_ant_root.add_child(ant_light)
+	for node in road_ant.find_children("*", "MeshInstance3D", true, false):
+		(node as MeshInstance3D).layers |= 2
 
 	# The model brings two clips: idle and walking. The road always uses walking.
 	var player := _ant_pivot.find_child("AnimationPlayer", true, false) as AnimationPlayer
-	if player != null:
+	if player != null and not player.get_animation_list().is_empty():
 		if player.has_animation("walking"):
 			player.play("walking")
-		elif not player.get_animation_list().is_empty():
+		else:
 			player.play(player.get_animation_list()[0])
+	else:
+		# A rigged model without clips is walked by the same procedural animator as in the
+		# level, so the ant on the road keeps moving
+		var animator := ANT_MODEL_ANIMATION.new()
+		animator.name = "AntModelAnimation"
+		_ant_pivot.add_child(animator)
+		animator.set_walking(true)
 
 	_build_road_camera()
 
@@ -458,7 +491,8 @@ func _make_resource_row(resource: Dictionary) -> HBoxContainer:
 	row.add_child(amount)
 
 	var id := str(resource["id"])
-	_amounts[id] = 0
+	_amounts[id] = Colony.get_amount(id) if is_instance_valid(Colony) else 0
+	amount.text = str(_amounts[id])
 	_amount_labels[id] = amount
 	return row
 
@@ -469,7 +503,9 @@ func _build_controls_panel() -> void:
 
 	var save := _make_button("Save")
 	save.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	save.pressed.connect(func() -> void: save_requested.emit())
+	save.pressed.connect(func() -> void:
+		save_requested.emit()
+		SaveGame.save_now())
 	column.add_child(save)
 
 	var menu := _make_button("Main menu")
@@ -659,6 +695,17 @@ func set_resource_amount(id: String, amount: int) -> void:
 func get_resource_amount(id: String) -> int:
 	return int(_amounts.get(id, 0))
 
+# The colony changed: show its new total, so digging can never leave the panel behind
+func _on_resource_changed(id: String, total: int) -> void:
+	set_resource_amount(id, total)
+
+# After a save is loaded the whole stockpile changes at once
+func _refresh_resources() -> void:
+	if not is_instance_valid(Colony):
+		return
+	for id in _amounts:
+		set_resource_amount(id, Colony.get_amount(id))
+
 # ---- Bottom card ----
 
 # Both buttons leave the level for the start screen. When there is a real in-game menu,
@@ -670,6 +717,8 @@ func _on_quit() -> void:
 	_go_to_start()
 
 func _go_to_start() -> void:
+	# Keep the dug field and the stockpile before leaving the level
+	SaveGame.save_now()
 	Engine.time_scale = 1.0
 	get_tree().paused = false
 	get_tree().change_scene_to_file(start_scene)

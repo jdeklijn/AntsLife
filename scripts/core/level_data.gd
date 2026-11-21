@@ -82,3 +82,32 @@ func fill_box(from: Vector3i, to: Vector3i, type: int) -> void:
 		for y in range(from.y, to.y + 1):
 			for x in range(from.x, to.x + 1):
 				set_cell(Vector3i(x, y, z), type)
+
+# ---- Digging ----
+
+const NEIGHBOURS: Array[Vector3i] = [
+	Vector3i(0, 1, 0), Vector3i(0, -1, 0),
+	Vector3i(0, 0, 1), Vector3i(0, 0, -1),
+	Vector3i(1, 0, 0), Vector3i(-1, 0, 0),
+]
+
+# True when at least one side of the cell is open: air, or outside the block. Digging is
+# only allowed there, so no invisible hole can appear inside solid ground and every dug
+# cell stays visible from the side the camera looks from.
+func has_open_neighbour(p: Vector3i) -> bool:
+	for dir in NEIGHBOURS:
+		if not in_bounds(p + dir) or get_cell(p + dir) == Cell.EMPTY:
+			return true
+	return false
+
+# A cell may be dug when it is solid, not marked as forbidden, and reaches open air
+func can_dig(p: Vector3i) -> bool:
+	return in_bounds(p) and get_cell(p) != Cell.EMPTY \
+		and not is_forbidden(p) and has_open_neighbour(p)
+
+# Takes one block out of the level. Returns false when the block may not be dug.
+func dig(p: Vector3i) -> bool:
+	if not can_dig(p):
+		return false
+	set_cell(p, Cell.EMPTY)
+	return true

@@ -6,7 +6,10 @@ blokkerige grond, laagjes weggraven en mieren die rondlopen en opdrachten uitvoe
 ## Nu in het spel
 
 - **3D level**: een blok grond van 20 × 22 × 20 cellen, opgebouwd uit gras- en grondblokken.
+- **Graniet eromheen**: het level ligt in een massa graniet. De blokken die aan de grond grenzen zijn echte 3D-blokken (niet weg te graven). Waar de camera de grond opensnijdt vult een platte steendoorsnede de rest van het beeld met dezelfde graniet, zodat de ondergrond als 2D-speelveld leest en niet als een grot met horizon. De kant waar de camera staat blijft open, zodat je het zand altijd ziet.
 - **Graven in lagen**: met de ogen aan de zijkant schakel je lagen uit, per zijde en per hoek.
+- **Graven met de muis**: klik met de Dig-tool (G) een blok weg; houd de linkermuisknop ingedrukt om een rechte rij of kolom in één keer weg te graven. Elke gedolven cel levert zand op.
+- **Mijngang-look**: wanden, vloer en plafond van weggegraven cellen krijgen hun eigen wand-, vloer- en plafondtextuur, zodat tunnels en schachten als mijngangen lezen.
 - **Camera**: draaien naar de vier zijden, bovenaanzicht en onderaanzicht, pannen en zoomen.
 - **Mier**: het echte geanimeerde 3D-model, met idle/walk-clips, selectie en een hitbox.
 - **Opdrachten**: een radiaal menu met Dig, Carry en Defend, afhankelijk van het mier-type.
@@ -43,5 +46,5 @@ scripts/
 
 ## Credits
 
-- Mierenmodel: `assets/characters/ants/player_ant/ant_v3_compleet.gltf`
+- Mierenmodel: `assets/characters/ants/player_ant/ant_v4.glb` (gerigged, 3.960 driehoeken)
 - Font: Nunito (SIL Open Font License, zie `assets/ui/fonts/Nunito/OFL.txt`)

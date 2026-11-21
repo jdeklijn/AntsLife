@@ -25,8 +25,9 @@ extends Node3D
 @export_range(0.1, 3.0, 0.05) var walking_speed: float = 1.0
 
 # ---- Walking (click to point) ----
-# How fast the ant walks, in blocks per second
-@export var move_speed: float = 1.5
+# How fast the ant walks, in blocks per second. The legs run at this speed too: see
+# AntModelAnimation.WALK_STRIDE.
+@export var move_speed: float = 1.0
 # How quickly the ant turns towards the direction it walks
 @export var turn_speed: float = 10.0
 # How close the ant has to get before it stops
@@ -35,6 +36,9 @@ extends Node3D
 # degrees, so this is what makes its head point the way it walks. Set it to 0 if the
 # model itself already faces -Z.
 @export var facing_offset_degrees: float = 180.0
+# Which way the ant looks before it walks anywhere, in degrees. The camera looks at the
+# grass from +Z, so 180 turns the ant towards the player instead of showing its back.
+@export var idle_facing_degrees: float = 180.0
 
 # ---- Ant data (decides which actions are available) ----
 @export var ant_name: String = "Ant"
@@ -64,6 +68,20 @@ var current_action: String = ""
 @export var auto_hit_box: bool = true
 @export var hit_margin: float = 0.15
 
+# ---- The ant's own light ----
+# The model is dark, so the ant carries a small spotlight that walks along with it. It
+# shines straight down, so turning the ant does not turn the light, and it only lights the
+# ant itself: the grass around it stays out of the beam, so no bright circle slides over
+# the field.
+@export var follow_light: bool = true
+@export var follow_light_color: Color = Color(1.0, 0.95, 0.86)
+@export var follow_light_energy: float = 8.0
+@export var follow_light_range: float = 5.0
+@export var follow_light_angle: float = 55.0
+
+# The render layer only the ant is on, so the follow light can pick it out of the scene
+const LIGHT_LAYER := 2
+
 var selected: bool = false
 var _ring: MeshInstance3D
 var _walk_target: Vector3
@@ -82,12 +100,20 @@ func _ready() -> void:
 		if place_on_grass:
 			start.y = _grass_row() + 1
 		position = cell_to_world(start)
+	# Face the player while standing still. Walking turns the ant its own way later on.
+	rotation.y = deg_to_rad(idle_facing_degrees)
 	_make_ring()
+	if follow_light:
+		_make_follow_light()
 	if show_hit_box:
 		_make_hit_box_debug()
 	Events.ant_selected.connect(_on_ant_selected)
 	Events.action_requested.connect(_on_action_requested)
 	_play_idle()
+	# Run the legs at the speed the ant really walks, so the feet stay on the grass
+	var animator := find_child("AntModelAnimation", true, false) as AntModelAnimation
+	if animator != null:
+		animator.walk_speed = move_speed / AntModelAnimation.WALK_STRIDE
 	if snap_model_to_ground:
 		_snap_model_to_ground.call_deferred()
 	Ants.register(self)
@@ -127,8 +153,29 @@ func _make_ring() -> void:
 	_ring.visible = selected
 	add_child(_ring)
 
-# Debug hit box (larger than ant, invisible)
+# The ant carries a light of its own, high enough above it to light the whole body. Only
+# the ant's render layer is lit by it, so the beam does not show on the grass.
+func _make_follow_light() -> void:
+	var layer_bit := 1 << (LIGHT_LAYER - 1)
+	var light := SpotLight3D.new()
+	light.name = "FollowLight"
+	light.position = Vector3(0.0, 2.6, 0.0)
+	light.rotation_degrees = Vector3(-90.0, 0.0, 0.0)
+	light.light_color = follow_light_color
+	light.light_energy = follow_light_energy
+	light.spot_range = follow_light_range
+	light.spot_angle = follow_light_angle
+	light.light_cull_mask = layer_bit
+	light.shadow_enabled = false
+	add_child(light)
+	for node in find_children("*", "MeshInstance3D", true, false):
+		var mesh := node as MeshInstance3D
+		# The level view is a mesh with a rebuild method; never put that on our layer
+		if mesh.has_method("rebuild"):
+			continue
+		mesh.layers |= layer_bit
 
+# Debug hit box (larger than ant, invisible)
 func _make_hit_box_debug() -> void:
 	var hit_shape := SphereShape3D.new()
 	hit_shape.radius = 0.6
